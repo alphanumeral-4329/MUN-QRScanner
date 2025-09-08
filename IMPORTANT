@@ -6,4 +6,4 @@ Usage instructions:
 2. To simulate login, type for ex. http://127.0.0.1:5000/login
 3. To simulate logout, type for ex. http://127.0.0.1:5000/logout
 4. To simulate scanning, type for ex. http://127.0.0.1:5000/scan/DL00A
-5. Refer oc_list.json and delegates.json for mock logins and scan details
+5. Refer oc_list.json and delegates.json for mock login credentials and scan details
