@@ -1,0 +1,481 @@
+/* Body and subtle animated background */
+body {
+    background: linear-gradient(135deg, #0a0a0a, #1a1a1a, #0a0a0a);
+    background-size: 400% 400%;
+    animation: gradientShift 20s ease infinite;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    overflow: hidden;
+    color: #ffd700;
+    position: relative;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Subtle diagonal lines overlay */
+body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: repeating-linear-gradient(
+        45deg,
+        rgba(255, 215, 0, 0.03),
+        rgba(255, 215, 0, 0.03) 1px,
+        transparent 1px,
+        transparent 20px
+    );
+    pointer-events: none;
+}
+
+/* Login container */
+.login-container {
+    background: linear-gradient(135deg, #0a0a0a, #1a1a1a);
+    padding: 50px 40px;
+    border-radius: 20px;
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+    text-align: center;
+    width: 380px;
+    max-width: 90%;
+    position: relative;
+    z-index: 1;
+    border: 1px solid #ffd700;
+    animation: fadeInScale 1s ease-out;
+}
+
+
+/* Fade-in animation for container */
+@keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* Event header */
+.event-header {
+    margin-bottom: 30px;
+}
+
+.event-name {
+    font-size: 2.5em;
+    font-weight: bold;
+    margin: 0;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px #ffd700;
+}
+
+.tagline {
+    font-size: 1.2em;
+    font-style: italic;
+    color: #ffd700;
+    margin-top: 5px;
+}
+
+/* Login form styling */
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.input-group {
+    position: relative;
+    background-color: #222;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
+    border: 1px solid #444;
+    transition: all 0.3s ease;
+}
+
+.input-group:focus-within {
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.8), inset 0 2px 5px rgba(0, 0, 0, 0.5);
+    border-color: #ffd700;
+}
+
+.input-group i {
+    color: #ffd700;
+    font-size: 1.2em;
+    margin-right: 15px;
+}
+
+.input-group input {
+    flex-grow: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #fff;
+    font-size: 1.1em;
+    padding: 5px 0;
+}
+
+.input-group input::placeholder {
+    color: #aaa;
+}
+
+/* Login button */
+.login-button {
+    background-color: #ffd700;
+    color: #000;
+    padding: 15px 0;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.2em;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+    transition: all 0.3s ease;
+}
+
+.login-button:hover {
+    background-color: #e6c200;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255, 215, 0, 0.6);
+}
+.dashboard-container {
+    background: linear-gradient(135deg, #0a0a0a, #1a1a1a);
+    border: 2px solid #ffd700;
+    border-radius: 20px;
+    padding: 30px 25px;
+    width: 400px;
+    max-width: 90%;
+    margin: 80px auto;
+    text-align: center;
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* comfortable spacing between elements */
+    align-items: center;
+}
+
+.dashboard-welcome {
+    color: #fff;
+    text-shadow: 0 0 10px #ffd700;
+    font-size: 1.8em;
+    margin: 0;
+}
+
+.dashboard-text {
+    font-size: 1.1em;
+    margin: 0;
+    color: #eee;
+}
+
+.logout-button {
+    background-color: #ffd700;
+    color: #000;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1em;
+    transition: all 0.3s ease;
+}
+
+.logout-button:hover {
+    background-color: #e6c200;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255, 215, 0, 0.6);
+}
+/* Global body */
+body {
+    background-color: #000;
+    color: #ffd700;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    overflow: hidden;
+}
+
+/* Fade-in animation */
+@keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* Home container */
+.home-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    animation: fadeInScale 1s ease-out;
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* Header with globe and event info */
+.home-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.home-header .globe {
+    margin-bottom: 10px;
+}
+
+.home-header .event-name {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #ffd700;
+    text-shadow: 0 0 10px #ffd700;
+    margin: 5px 0;
+}
+
+.home-header .tagline {
+    font-size: 1rem;
+    color: #fff;
+    margin: 0;
+    opacity: 0.8;
+}
+
+/* Dashboard box */
+.home-box {
+    background: rgba(26, 26, 26, 0.85);
+    border: 1px solid #ffd700;
+    border-radius: 20px;
+    padding: 40px 30px;
+    max-width: 500px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+    backdrop-filter: blur(10px);
+}
+
+/* Welcome text */
+.home-box h1 {
+    color: #fff;
+    font-size: 2rem;
+    margin-bottom: 10px;
+    text-shadow: 0 0 10px #ffd700;
+}
+
+/* Description text */
+.home-box p {
+    color: #ffd700;
+    margin-bottom: 25px;
+    font-size: 1rem;
+}
+
+/* Delegate info list */
+.delegate-info {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.delegate-info dt {
+    font-weight: bold;
+    color: #ffd700;
+}
+
+.delegate-info dd {
+    margin: 0 0 10px 10px;
+    color: #fff;
+}
+
+/* Buttons */
+.logout-button, .validate-button {
+    background-color: #ffd700;
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 20px;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 10px;
+}
+
+.logout-button:hover, .validate-button:hover {
+    background-color: #e6c200;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(255, 215, 0, 0.6);
+}
+
+/* Optional subtle gradient background animation */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, #0a0a0a, #333, #0a0a0a);
+    background-size: 200% 200%;
+    animation: gradientShift 15s ease infinite;
+    z-index: -1;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+/* General Body */
+body {
+    background-color: #000;
+    font-family: Arial, sans-serif;
+    color: #ffd700;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Home Container */
+.home-container {
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid #ffd700;
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.6);
+    text-align: center;
+    animation: fadeInScale 1s ease-out;
+}
+
+/* Fade-in Animation */
+@keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* Header (Event Name and Tagline) */
+.home-header {
+    margin-bottom: 30px;
+}
+
+.home-header .globe {
+    margin-bottom: 10px;
+}
+
+.home-header svg {
+    width: 64px;
+    height: 64px;
+    fill: #ffd700;
+    animation: rotateGlobe 20s linear infinite;
+}
+
+@keyframes rotateGlobe {
+    from { transform: rotateY(0deg); }
+    to { transform: rotateY(360deg); }
+}
+
+.event-name {
+    font-size: 1.8em;
+    font-weight: bold;
+    margin: 5px 0;
+    color: #ffd700;
+    text-shadow: 0 0 8px #ffd700;
+}
+
+.tagline {
+    font-size: 1em;
+    margin: 0;
+    color: #fff;
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.7);
+}
+
+/* Attendance Box */
+.home-box {
+    background-color: #1a1a1a;
+    padding: 25px;
+    border-radius: 15px;
+    border: 1px solid #ffd700;
+    box-shadow: inset 0 0 15px rgba(255, 215, 0, 0.3);
+}
+
+.home-box h1 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.5em;
+    color: #fff;
+    text-shadow: 0 0 5px #ffd700;
+}
+
+.home-box p {
+    margin: 10px 0 20px 0;
+    font-size: 1.1em;
+    color: #ffd700;
+}
+
+/* Delegate Info List */
+.delegate-info {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.delegate-info dt {
+    font-weight: bold;
+    margin-top: 8px;
+}
+
+.delegate-info dd {
+    margin-left: 15px;
+    margin-bottom: 8px;
+}
+
+/* Buttons */
+.validate-button, .logout-button {
+    background-color: #ffd700;
+    color: #000;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1em;
+    margin-top: 10px;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+.validate-button:hover, .logout-button:hover {
+    background-color: #e6c200;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 215, 0, 0.6);
+}
+
+/* Actions container */
+.actions {
+    margin-top: 15px;
+}
+.spinning-globe {
+    width: 80px;
+    height: 80px;
+    animation: rotateGlobe 20s linear infinite;
+    display: block;
+    margin: 0 auto 10px auto;
+}
+
+@keyframes rotateGlobe {
+    from { transform: rotateY(0deg); }
+    to { transform: rotateY(360deg); }
+}
