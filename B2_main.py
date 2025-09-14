@@ -18,14 +18,11 @@ service_account_info = json.loads(os.environ['GOOGLE_SERVICE_ACCOUNT_JSON'])
 creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPE)
 client = gspread.authorize(creds)
 
-
 master_sheet = client.open("Master_Sheet").worksheet("Sheet1")
 attendance_sheet = client.open("Attendance_Log").worksheet("Sheet1")
 ocs_sheet = client.open("OC_Details").worksheet("Sheet1")
 
-
 oc_list = {r["OC_ID"]: r["Password"] for r in ocs_sheet.get_all_records()}
-
 
 delegates = {
     r["Delegate_ID"]: {
