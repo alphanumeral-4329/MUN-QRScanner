@@ -18,23 +18,23 @@ service_account_info = json.loads(os.environ['GOOGLE_SERVICE_ACCOUNT_JSON'])
 creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPE)
 client = gspread.authorize(creds)
 
+# --- CACHE VARIABLES ---
 master_sheet = client.open("Master_Sheet").worksheet("Sheet1")
 attendance_sheet = client.open("Attendance_Log").worksheet("Sheet1")
 ocs_sheet = client.open("OC_Details").worksheet("Sheet1")
 
-oc_list = {r["OC_ID"]: r["Password"] for r in ocs_sheet.get_all_records()}
+delegates = {}
+oc_list = {}
+attendance_records = []
 
-delegates = {
-    r["Delegate_ID"]: {
-        "name": r["Name"],
-        "country": r.get("Country", ""),
-        "committee": r["Comittee"],
-        "portfolio": r.get("Portfolio", ""),
-        "liability_form": r.get("Liability_Form", ""),
-        "transport_form": r.get("Transport_Form", "")
-    }
-    for r in master_sheet.get_all_records()
-}
+def refresh_cache():
+    global delegates, oc_list, attendance_records
+    delegates = {r["Delegate_ID"]: r for r in master_sheet.get_all_records()}
+    oc_list = {r["OC_ID"]: r["Password"] for r in ocs_sheet.get_all_records()}
+    attendance_records = attendance_sheet.get_all_records()
+
+# Initial cache load
+refresh_cache()
 
 @app.route("/")
 def home():
@@ -69,22 +69,24 @@ def scan(delegate_id):
     if delegate_id not in delegates:
         return f"❌ Delegate {delegate_id} not found."
     delegate = delegates[delegate_id]
-    records = attendance_sheet.get_all_records()
+
     scanned_delegate = {
-        "name": delegate["name"],
-        "country": delegate.get("country", ""),
-        "committee": delegate["committee"],
-        "portfolio": delegate.get("portfolio", ""),
-        "liability_form": delegate.get("liability_form", ""),
-        "transport_form": delegate.get("transport_form", ""),
+        "name": delegate["Name"],
+        "country": delegate.get("Country", ""),
+        "committee": delegate["Comittee"],
+        "portfolio": delegate.get("Portfolio", ""),
+        "liability_form": delegate.get("Liability_Form", ""),
+        "transport_form": delegate.get("Transport_Form", ""),
         "scanned_by": None,
         "timestamp": None
     }
-    for record in records:
+
+    for record in attendance_records:
         if record["Delegate_ID"] == delegate_id:
             scanned_delegate["scanned_by"] = record["OC_ID"]
             scanned_delegate["timestamp"] = record["Timestamp"]
             break
+
     return render_template("home.html", delegate=scanned_delegate, delegate_id=delegate_id, oc_id=oc_id)
 
 @app.route("/validate/<delegate_id>", methods=["POST"])
@@ -92,18 +94,28 @@ def validate(delegate_id):
     if "oc_id" not in session:
         return redirect(url_for("login"))
     oc_id = session["oc_id"]
-    records = attendance_sheet.get_all_records()
-    if not any(r["Delegate_ID"] == delegate_id for r in records):
+
+    if not any(r["Delegate_ID"] == delegate_id for r in attendance_records):
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         delegate = delegates.get(delegate_id, {})
-        attendance_sheet.append_row([
+        row = [
             delegate_id,
-            delegate.get("name", ""),
-            delegate.get("committee", ""),
-            delegate.get("portfolio", ""),
+            delegate.get("Name", ""),
+            delegate.get("Comittee", ""),
+            delegate.get("Portfolio", ""),
             oc_id,
             timestamp
-        ])
+        ]
+        attendance_records.append({
+            "Delegate_ID": delegate_id,
+            "Name": delegate.get("Name", ""),
+            "Comittee": delegate.get("Comittee", ""),
+            "Portfolio": delegate.get("Portfolio", ""),
+            "OC_ID": oc_id,
+            "Timestamp": timestamp
+        })
+        attendance_sheet.append_row(row)
+
     return redirect(url_for("scan", delegate_id=delegate_id))
 
 @app.route("/manual_scan", methods=["POST"])
@@ -114,6 +126,13 @@ def manual_scan():
     if delegate_id not in delegates:
         return f"❌ Delegate {delegate_id} not found."
     return redirect(url_for("scan", delegate_id=delegate_id))
+
+@app.route("/refresh_cache")
+def refresh_cache_route():
+    if "oc_id" not in session:
+        return redirect(url_for("login"))
+    refresh_cache()
+    return "✅ Cache refreshed!"
 
 if __name__ == "__main__":
     app.run(debug=True)
