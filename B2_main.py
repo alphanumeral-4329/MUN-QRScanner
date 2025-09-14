@@ -1,11 +1,12 @@
 from flask import Flask, request, render_template, redirect, url_for, session
 import gspread
+import os
+import json
 from google.oauth2.service_account import Credentials
 from datetime import timedelta, datetime
-import os
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev_fallback_secret")
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "fallback_secret")
 app.permanent_session_lifetime = timedelta(days=1)
 
 SCOPE = [
@@ -13,17 +14,18 @@ SCOPE = [
     "https://www.googleapis.com/auth/drive"
 ]
 
-creds = Credentials.from_service_account_file(
-    "secret_key.json",
-    scopes=SCOPE
-)
+service_account_info = json.loads(os.environ['GOOGLE_SERVICE_ACCOUNT_JSON'])
+creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPE)
 client = gspread.authorize(creds)
+
 
 master_sheet = client.open("Master_Sheet").worksheet("Sheet1")
 attendance_sheet = client.open("Attendance_Log").worksheet("Sheet1")
 ocs_sheet = client.open("OC_Details").worksheet("Sheet1")
 
+
 oc_list = {r["OC_ID"]: r["Password"] for r in ocs_sheet.get_all_records()}
+
 
 delegates = {
     r["Delegate_ID"]: {
