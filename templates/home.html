@@ -52,6 +52,15 @@
         <div class="actions">
             <a href="/logout" class="logout-button">Logout</a>
         </div>
+        <div class="actions">
+    {% if pending_count > 0 %}
+        <p>🕒 Pending attendance records: {{ pending_count }}</p>
+        <a href="/flush" class="validate-button">💾 Flush to Sheets</a>
+    {% endif %}
+    <a href="/refresh_cache" class="validate-button">🔄 Refresh Cache</a>
+    <a href="/logout" class="logout-button">Logout</a>
+</div>
+
     </section>
 
 </main>
