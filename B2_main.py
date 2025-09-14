@@ -2,11 +2,11 @@ from flask import Flask, request, render_template, redirect, url_for, session
 import gspread
 from google.oauth2.service_account import Credentials
 from datetime import timedelta, datetime
+import os
 
 app = Flask(__name__)
-app.secret_key = "MUN2025_REPLACE_WITH_SECURE_RANDOM_STRING"
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev_fallback_secret")
 app.permanent_session_lifetime = timedelta(days=1)
-
 
 SCOPE = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -23,7 +23,6 @@ master_sheet = client.open("Master_Sheet").worksheet("Sheet1")
 attendance_sheet = client.open("Attendance_Log").worksheet("Sheet1")
 ocs_sheet = client.open("OC_Details").worksheet("Sheet1")
 
-
 oc_list = {r["OC_ID"]: r["Password"] for r in ocs_sheet.get_all_records()}
 
 delegates = {
@@ -37,10 +36,6 @@ delegates = {
     }
     for r in master_sheet.get_all_records()
 }
-
-
-scanned_ids = {r["Delegate_ID"] for r in attendance_sheet.get_all_records()}
-
 
 @app.route("/")
 def home():
@@ -71,31 +66,37 @@ def logout():
 def scan(delegate_id):
     if "oc_id" not in session:
         return redirect(url_for("login"))
-    
+    oc_id = session["oc_id"]
     if delegate_id not in delegates:
         return f"❌ Delegate {delegate_id} not found."
-
     delegate = delegates[delegate_id]
-    already_scanned = delegate_id in scanned_ids
-
-    return render_template(
-        "home.html", 
-        delegate=delegate, 
-        delegate_id=delegate_id, 
-        scanned=already_scanned, 
-        oc_id=session["oc_id"]
-    )
+    records = attendance_sheet.get_all_records()
+    scanned_delegate = {
+        "name": delegate["name"],
+        "country": delegate.get("country", ""),
+        "committee": delegate["committee"],
+        "portfolio": delegate.get("portfolio", ""),
+        "liability_form": delegate.get("liability_form", ""),
+        "transport_form": delegate.get("transport_form", ""),
+        "scanned_by": None,
+        "timestamp": None
+    }
+    for record in records:
+        if record["Delegate_ID"] == delegate_id:
+            scanned_delegate["scanned_by"] = record["OC_ID"]
+            scanned_delegate["timestamp"] = record["Timestamp"]
+            break
+    return render_template("home.html", delegate=scanned_delegate, delegate_id=delegate_id, oc_id=oc_id)
 
 @app.route("/validate/<delegate_id>", methods=["POST"])
 def validate(delegate_id):
     if "oc_id" not in session:
         return redirect(url_for("login"))
-
     oc_id = session["oc_id"]
-
-    if delegate_id not in scanned_ids:
+    records = attendance_sheet.get_all_records()
+    if not any(r["Delegate_ID"] == delegate_id for r in records):
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        delegate = delegates[delegate_id]
+        delegate = delegates.get(delegate_id, {})
         attendance_sheet.append_row([
             delegate_id,
             delegate.get("name", ""),
@@ -104,22 +105,16 @@ def validate(delegate_id):
             oc_id,
             timestamp
         ])
-        scanned_ids.add(delegate_id)
-
     return redirect(url_for("scan", delegate_id=delegate_id))
-
 
 @app.route("/manual_scan", methods=["POST"])
 def manual_scan():
     if "oc_id" not in session:
         return redirect(url_for("login"))
-    
-    delegate_id = request.form.get("delegate_id", "").strip()
-    if not delegate_id or delegate_id not in delegates:
+    delegate_id = request.form.get("delegate_id").strip()
+    if delegate_id not in delegates:
         return f"❌ Delegate {delegate_id} not found."
-    
     return redirect(url_for("scan", delegate_id=delegate_id))
-
 
 if __name__ == "__main__":
     app.run(debug=True)
