@@ -1,3 +1,14 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MUN Attendance Tracker - Home</title>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
 <main class="home-container">
 
     <header class="home-header">
@@ -9,7 +20,6 @@
     </header>
 
     <section class="home-box">
-
         {% if delegate %}
             {% if delegate.scanned_by %}
                 <p>⁉️ Already registered!</p>
@@ -50,17 +60,16 @@
         {% endif %}
 
         <div class="actions">
+            {% if pending_count > 0 %}
+                <p>🕒 Pending attendance records: {{ pending_count }}</p>
+                <a href="/flush" class="validate-button">💾 Flush to Sheets</a>
+            {% endif %}
+            <a href="/refresh_cache" class="validate-button">🔄 Refresh Cache</a>
             <a href="/logout" class="logout-button">Logout</a>
         </div>
-        <div class="actions">
-    {% if pending_count > 0 %}
-        <p>🕒 Pending attendance records: {{ pending_count }}</p>
-        <a href="/flush" class="validate-button">💾 Flush to Sheets</a>
-    {% endif %}
-    <a href="/refresh_cache" class="validate-button">🔄 Refresh Cache</a>
-    <a href="/logout" class="logout-button">Logout</a>
-</div>
-
     </section>
 
 </main>
+
+</body>
+</html>
