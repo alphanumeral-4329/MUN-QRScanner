@@ -3,71 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OM MUN 2025 - Dashboard</title>
+    <title>OM MUN Attendance</title>
 
-    <!-- CSS -->
+   
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
-    <!-- Font Awesome -->
+   
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-    <div class="container">
-        <!-- Header -->
-        <div class="event-header">
-            <h1 class="event-name">OM MUN 2025</h1>
-            <h3 class="tagline">Initiate. Innovate. Inspire.</h3>
-        </div>
 
-        <!-- Top Bar: OC ID, Refresh, Logout -->
-        <div style="margin-bottom: 20px;">
-            <span style="color:#bbb;">Logged in as <strong>{{ oc_id }}</strong></span><br>
-            <a href="{{ url_for('refresh_route') }}" class="button-link"><i class="fas fa-sync-alt"></i> Refresh Cache</a>
-            <a href="{{ url_for('flush_route') }}" class="button-link"><i class="fas fa-database"></i> Flush</a>
-            <a href="{{ url_for('logout') }}" class="button-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
-        </div>
+<div class="navbar">
+    <span class="oc-id">Logged in as: {{ oc_id }}</span>
+    <a href="{{ url_for('refresh_route') }}" class="btn refresh-btn">
+        <i class="fas fa-sync-alt"></i> Refresh Cache
+    </a>
+    <a href="{{ url_for('logout') }}" class="btn logout-btn">
+        <i class="fas fa-sign-out-alt"></i> Logout
+    </a>
+</div>
 
-        <!-- Manual Scan -->
-        <form method="POST" action="{{ url_for('manual_scan') }}" class="input-group">
-            <input type="text" name="delegate_id" placeholder="Enter Delegate ID" required>
-            <button type="submit"><i class="fas fa-search"></i> Scan</button>
-        </form>
+<div class="container">
+    <h1>Delegate Attendance</h1>
 
-        <!-- Pending count -->
-        {% if pending_count > 0 %}
-            <p class="flash-message">⚠️ {{ pending_count }} record(s) pending flush.</p>
-        {% endif %}
+    
+    <form method="POST" action="{{ url_for('manual_scan') }}">
+        <input type="text" name="delegate_id" placeholder="Enter Delegate ID" required>
+        <button type="submit">Scan</button>
+    </form>
 
-        <!-- Delegate Details -->
-        {% if delegate %}
+    {% if delegate %}
         <div class="delegate-card">
-            <h3>Delegate Details</h3>
-            <p><strong>ID:</strong> {{ delegate_id }}</p>
-            <p><strong>Name:</strong> {{ delegate.name }}</p>
-            <p><strong>Country:</strong> {{ delegate.country }}</p>
-            <p><strong>Committee:</strong> {{ delegate.committee }}</p>
-            <p><strong>Portfolio:</strong> {{ delegate.portfolio }}</p>
-            <p><strong>Liability Form:</strong> {{ delegate.liability_form }}</p>
-            <p><strong>Transport Form:</strong> {{ delegate.transport_form }}</p>
-
+            <h2>{{ delegate.name }} ({{ delegate_id }})</h2>
+            <p>Committee: {{ delegate.committee }}</p>
+            <p>Portfolio: {{ delegate.portfolio }}</p>
+            <p>Country: {{ delegate.country }}</p>
+            <p>Liability Form: {{ delegate.liability_form }}</p>
+            <p>Transport Form: {{ delegate.transport_form }}</p>
             {% if delegate.scanned_by %}
-                <p><strong>✅ Already Registered</strong> by {{ delegate.scanned_by }} at {{ delegate.timestamp }}</p>
+                <p class="scanned">✅ Already scanned by {{ delegate.scanned_by }} at {{ delegate.timestamp }}</p>
             {% else %}
                 <form method="POST" action="{{ url_for('validate', delegate_id=delegate_id) }}">
-                    <button type="submit"><i class="fas fa-check-circle"></i> Validate</button>
+                    <button type="submit">Confirm Attendance</button>
                 </form>
             {% endif %}
         </div>
-        {% endif %}
+    {% endif %}
 
-        <!-- Flash messages -->
-        {% with messages = get_flashed_messages() %}
-          {% if messages %}
-            {% for msg in messages %}
-              <p class="flash-message">{{ msg }}</p>
-            {% endfor %}
-          {% endif %}
-        {% endwith %}
+    <p>Pending Attendance Records: {{ pending_count }}</p>
+    <a href="{{ url_for('flush_route') }}" class="btn flush-btn">Flush to Google Sheets</a>
+</div>
+
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    <div class="flash-messages">
+      {% for message in messages %}
+        <p>{{ message }}</p>
+      {% endfor %}
     </div>
+  {% endif %}
+{% endwith %}
+
 </body>
 </html>
