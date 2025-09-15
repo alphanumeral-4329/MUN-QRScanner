@@ -1,62 +1,73 @@
-<main class="home-container">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OM MUN 2025 - Dashboard</title>
 
-    <header class="home-header">
-        <div class="globe">
-            <img src="{{ url_for('static', filename='vector-logo.svg') }}" class="globe-vector" alt="Golden Globe">
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="event-header">
+            <h1 class="event-name">OM MUN 2025</h1>
+            <h3 class="tagline">Initiate. Innovate. Inspire.</h3>
         </div>
-        <h2 class="tagline">Initiate. Innovate. Inspire.</h2>
-        <h3 class="event-name">OM MUN 2025</h3>
-    </header>
 
-    <section class="home-box">
+        <!-- Top Bar: OC ID, Refresh, Logout -->
+        <div style="margin-bottom: 20px;">
+            <span style="color:#bbb;">Logged in as <strong>{{ oc_id }}</strong></span><br>
+            <a href="{{ url_for('refresh_route') }}" class="button-link"><i class="fas fa-sync-alt"></i> Refresh Cache</a>
+            <a href="{{ url_for('flush_route') }}" class="button-link"><i class="fas fa-database"></i> Flush</a>
+            <a href="{{ url_for('logout') }}" class="button-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
 
-        {% if delegate %}
-            {% if delegate.scanned_by %}
-                <p>⁉️ Already registered!</p>
-            {% else %}
-                <p>✅ Attendance ready to log!</p>
-            {% endif %}
+        <!-- Manual Scan -->
+        <form method="POST" action="{{ url_for('manual_scan') }}" class="input-group">
+            <input type="text" name="delegate_id" placeholder="Enter Delegate ID" required>
+            <button type="submit"><i class="fas fa-search"></i> Scan</button>
+        </form>
 
-            <dl class="delegate-info">
-                <dt>Name:</dt> <dd>{{ delegate['name'] }}</dd>
-                <dt>Country:</dt> <dd>{{ delegate['country'] }}</dd>
-                <dt>Committee:</dt> <dd>{{ delegate['committee'] }}</dd>
-                <dt>Liability Form:</dt> <dd>{{ delegate['liability_form'] }}</dd>
-                <dt>Transport Form:</dt> <dd>{{ delegate['transport_form'] }}</dd>
-                {% if delegate.scanned_by %}
-                    <dt>Scanned by:</dt> <dd>{{ delegate['scanned_by'] }}</dd>
-                    <dt>Time:</dt> <dd>{{ delegate['timestamp'] }}</dd>
-                {% endif %}
-            </dl>
-
-            {% if not delegate.scanned_by %}
-                <form action="/validate/{{ delegate_id }}" method="POST">
-                    <button type="submit" class="validate-button">✅ Validate Attendance</button>
-                </form>
-            {% endif %}
-
-        {% else %}
-            <h1>Welcome, {{ oc_id }}!</h1>
-            <p>🎯 Scan delegate QR codes to track attendance.</p>
-
-            <form action="/manual_scan" method="POST" class="manual-form">
-                <input type="text" name="delegate_id" placeholder="Enter Delegate ID manually" required>
-                <button type="submit" class="validate-button">📥 Manual Scan</button>
-            </form>
-
-            <p style="margin-top:15px;">
-                <a href="/refresh_cache" class="validate-button">🔄 Refresh Cache</a>
-            </p>
+        <!-- Pending count -->
+        {% if pending_count > 0 %}
+            <p class="flash-message">⚠️ {{ pending_count }} record(s) pending flush.</p>
         {% endif %}
 
-        <div class="actions">
-            {% if pending_count > 0 %}
-                <p>🕒 Pending attendance records: {{ pending_count }}</p>
-                <a href="/flush" class="validate-button">💾 Flush to Sheets</a>
+        <!-- Delegate Details -->
+        {% if delegate %}
+        <div class="delegate-card">
+            <h3>Delegate Details</h3>
+            <p><strong>ID:</strong> {{ delegate_id }}</p>
+            <p><strong>Name:</strong> {{ delegate.name }}</p>
+            <p><strong>Country:</strong> {{ delegate.country }}</p>
+            <p><strong>Committee:</strong> {{ delegate.committee }}</p>
+            <p><strong>Portfolio:</strong> {{ delegate.portfolio }}</p>
+            <p><strong>Liability Form:</strong> {{ delegate.liability_form }}</p>
+            <p><strong>Transport Form:</strong> {{ delegate.transport_form }}</p>
+
+            {% if delegate.scanned_by %}
+                <p><strong>✅ Already Registered</strong> by {{ delegate.scanned_by }} at {{ delegate.timestamp }}</p>
+            {% else %}
+                <form method="POST" action="{{ url_for('validate', delegate_id=delegate_id) }}">
+                    <button type="submit"><i class="fas fa-check-circle"></i> Validate</button>
+                </form>
             {% endif %}
-            <a href="/logout" class="logout-button">🚪 Logout</a>
         </div>
+        {% endif %}
 
-    </section>
-
-</main>
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            {% for msg in messages %}
+              <p class="flash-message">{{ msg }}</p>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+    </div>
+</body>
+</html>
