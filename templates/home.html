@@ -4,56 +4,47 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OM MUN Attendance</title>
-
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
 
-<div class="navbar">
-    <span class="oc-id">Logged in as: {{ oc_id }}</span>
-    <div class="nav-buttons">
-        <a href="{{ url_for('refresh_route') }}" class="btn">
-            <i class="fas fa-sync-alt"></i> Refresh Cache
-        </a>
-        <a href="{{ url_for('logout') }}" class="btn">
-            <i class="fas fa-sign-out-alt"></i> Logout
-        </a>
-    </div>
-</div>
-
-<div class="container">
-    <h1>Delegate Attendance</h1>
-
-    <!-- Manual Scan -->
-    <form method="POST" action="{{ url_for('manual_scan') }}" class="manual-form">
-        <input type="text" name="delegate_id" placeholder="Enter Delegate ID" required>
-        <button type="submit" class="btn">Scan</button>
-    </form>
+<div class="delegate-card centered-card">
+    <h2>Delegate Attendance</h2>
 
     {% if delegate %}
-        <div class="delegate-card">
-            <h2>{{ delegate.name }} ({{ delegate_id }})</h2>
+        <div class="delegate-info">
+            <h3>{{ delegate.name }} ({{ delegate_id }})</h3>
             <p>Committee: {{ delegate.committee }}</p>
             <p>Portfolio: {{ delegate.portfolio }}</p>
             <p>Country: {{ delegate.country }}</p>
             <p>Liability Form: {{ delegate.liability_form }}</p>
             <p>Transport Form: {{ delegate.transport_form }}</p>
-
             {% if delegate.scanned_by %}
                 <p class="scanned">✅ Already scanned by {{ delegate.scanned_by }} at {{ delegate.timestamp }}</p>
             {% else %}
                 <form method="POST" action="{{ url_for('validate', delegate_id=delegate_id) }}">
-                    <button type="submit" class="btn">Confirm Attendance</button>
+                    <button type="submit">Confirm Attendance</button>
                 </form>
             {% endif %}
         </div>
     {% endif %}
 
+    <form method="POST" action="{{ url_for('manual_scan') }}" class="manual-form">
+        <input type="text" name="delegate_id" placeholder="Enter Delegate ID" required>
+        <button type="submit">Scan</button>
+    </form>
+
+    <div class="oc-actions">
+        <span>Logged in as: {{ oc_id }}</span>
+        <div class="action-buttons">
+            <a href="{{ url_for('refresh_route') }}" class="btn"><i class="fas fa-sync-alt"></i> Refresh</a>
+            <a href="{{ url_for('flush_route') }}" class="btn"><i class="fas fa-file-upload"></i> Flush</a>
+            <a href="{{ url_for('logout') }}" class="btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </div>
+
     <p>Pending Attendance Records: {{ pending_count }}</p>
-    {% if pending_count > 0 %}
-        <a href="{{ url_for('flush_route') }}" class="btn flush-btn">💾 Flush to Google Sheets</a>
-    {% endif %}
 </div>
 
 {% with messages = get_flashed_messages() %}
