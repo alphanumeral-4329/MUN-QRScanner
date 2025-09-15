@@ -479,16 +479,24 @@ body {
     from { transform: rotateY(0deg); }
     to { transform: rotateY(360deg); }
 }
-.manual-entry {
+.manual-form {
+    display: flex;
+    gap: 10px;
     margin-top: 20px;
-    text-align: center;
 }
-.manual-entry h3 {
-    color: #ffd700;
-    margin-bottom: 10px;
-    text-shadow: 0 0 5px #ffd700;
+
+.manual-form input {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    font-size: 14px;
 }
-/* Buttons for flush and refresh */
+
+.manual-form button {
+    flex-shrink: 0;
+}
+* Buttons for flush and refresh */
 .actions .validate-button {
     background-color: #ffd700;
     color: #000;
