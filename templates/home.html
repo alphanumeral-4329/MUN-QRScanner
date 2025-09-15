@@ -5,31 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OM MUN Attendance</title>
 
-   
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-
-   
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
 
 <div class="navbar">
     <span class="oc-id">Logged in as: {{ oc_id }}</span>
-    <a href="{{ url_for('refresh_route') }}" class="btn refresh-btn">
-        <i class="fas fa-sync-alt"></i> Refresh Cache
-    </a>
-    <a href="{{ url_for('logout') }}" class="btn logout-btn">
-        <i class="fas fa-sign-out-alt"></i> Logout
-    </a>
+    <div class="nav-buttons">
+        <a href="{{ url_for('refresh_route') }}" class="btn">
+            <i class="fas fa-sync-alt"></i> Refresh Cache
+        </a>
+        <a href="{{ url_for('logout') }}" class="btn">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
+    </div>
 </div>
 
 <div class="container">
     <h1>Delegate Attendance</h1>
 
-    
-    <form method="POST" action="{{ url_for('manual_scan') }}">
+    <!-- Manual Scan -->
+    <form method="POST" action="{{ url_for('manual_scan') }}" class="manual-form">
         <input type="text" name="delegate_id" placeholder="Enter Delegate ID" required>
-        <button type="submit">Scan</button>
+        <button type="submit" class="btn">Scan</button>
     </form>
 
     {% if delegate %}
@@ -40,20 +39,22 @@
             <p>Country: {{ delegate.country }}</p>
             <p>Liability Form: {{ delegate.liability_form }}</p>
             <p>Transport Form: {{ delegate.transport_form }}</p>
+
             {% if delegate.scanned_by %}
                 <p class="scanned">✅ Already scanned by {{ delegate.scanned_by }} at {{ delegate.timestamp }}</p>
             {% else %}
                 <form method="POST" action="{{ url_for('validate', delegate_id=delegate_id) }}">
-                    <button type="submit">Confirm Attendance</button>
+                    <button type="submit" class="btn">Confirm Attendance</button>
                 </form>
             {% endif %}
         </div>
     {% endif %}
 
     <p>Pending Attendance Records: {{ pending_count }}</p>
-    <a href="{{ url_for('flush_route') }}" class="btn flush-btn">Flush to Google Sheets</a>
+    {% if pending_count > 0 %}
+        <a href="{{ url_for('flush_route') }}" class="btn flush-btn">💾 Flush to Google Sheets</a>
+    {% endif %}
 </div>
-
 
 {% with messages = get_flashed_messages() %}
   {% if messages %}
