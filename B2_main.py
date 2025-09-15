@@ -4,6 +4,7 @@ import os
 import json
 from google.oauth2.service_account import Credentials
 from datetime import timedelta, datetime
+from threading import Lock
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "fallback_secret")
@@ -13,6 +14,7 @@ SCOPE = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive"
 ]
+
 
 service_account_info = json.loads(os.environ['GOOGLE_SERVICE_ACCOUNT_JSON'])
 creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPE)
@@ -36,38 +38,51 @@ delegates = {
     for r in master_sheet.get_all_records()
 }
 
+
 BATCH_SIZE = 50
-attendance_cache = {}  
-pending_attendance = []  
+attendance_cache = {}      
+pending_attendance = []   
+lock = Lock()              
 
 def flush_pending():
+    """Flush pending attendance records to Google Sheets."""
     global pending_attendance
     if not pending_attendance:
         return 0
-    # Append rows to Google Sheets in batch
-    rows = [[r["Delegate_ID"], r["name"], r["committee"], r.get("portfolio",""), r["scanned_by"], r["timestamp"]]
-            for r in pending_attendance]
+
+    rows = [
+        [r["Delegate_ID"], r["name"], r["committee"], r.get("portfolio", ""),
+         r["scanned_by"], r["timestamp"]]
+        for r in pending_attendance
+    ]
     attendance_sheet.append_rows(rows)
-    # Update cache
+
+    
     for r in pending_attendance:
         attendance_cache[r["Delegate_ID"]] = r
+
     flushed_count = len(pending_attendance)
     pending_attendance = []
     return flushed_count
 
 def refresh_cache():
+    """Reload attendance cache from Google Sheets."""
     global attendance_cache
     records = attendance_sheet.get_all_records()
     attendance_cache = {r["Delegate_ID"]: r for r in records}
 
-# -------------------------------
-# Routes
-# -------------------------------
+
 @app.route("/")
 def home():
     if "oc_id" not in session:
         return redirect(url_for("login"))
-    return render_template("home.html", oc_id=session["oc_id"], delegate=None, delegate_id=None, pending_count=len(pending_attendance))
+    return render_template(
+        "home.html",
+        oc_id=session["oc_id"],
+        delegate=None,
+        delegate_id=None,
+        pending_count=len(pending_attendance)
+    )
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -93,11 +108,11 @@ def scan(delegate_id):
     if "oc_id" not in session:
         return redirect(url_for("login"))
     oc_id = session["oc_id"]
+
     if delegate_id not in delegates:
         return f"❌ Delegate {delegate_id} not found."
     delegate = delegates[delegate_id]
 
-    # Check cache first
     cached_record = attendance_cache.get(delegate_id)
     scanned_delegate = {
         "name": delegate["name"],
@@ -106,10 +121,17 @@ def scan(delegate_id):
         "portfolio": delegate.get("portfolio", ""),
         "liability_form": delegate.get("liability_form", ""),
         "transport_form": delegate.get("transport_form", ""),
-        "scanned_by": cached_record["OC_ID"] if cached_record else None,
-        "timestamp": cached_record["Timestamp"] if cached_record else None
+        "scanned_by": cached_record.get("scanned_by") if cached_record else None,
+        "timestamp": cached_record.get("timestamp") if cached_record else None
     }
-    return render_template("home.html", delegate=scanned_delegate, delegate_id=delegate_id, oc_id=oc_id, pending_count=len(pending_attendance))
+
+    return render_template(
+        "home.html",
+        delegate=scanned_delegate,
+        delegate_id=delegate_id,
+        oc_id=oc_id,
+        pending_count=len(pending_attendance)
+    )
 
 @app.route("/validate/<delegate_id>", methods=["POST"])
 def validate(delegate_id):
@@ -117,24 +139,28 @@ def validate(delegate_id):
         return redirect(url_for("login"))
     oc_id = session["oc_id"]
 
-    # Skip if already scanned
-    if delegate_id in attendance_cache or any(r["Delegate_ID"] == delegate_id for r in pending_attendance):
-        return redirect(url_for("scan", delegate_id=delegate_id))
+    with lock:
+        
+        if delegate_id in attendance_cache or any(r["Delegate_ID"] == delegate_id for r in pending_attendance):
+            return redirect(url_for("scan", delegate_id=delegate_id))
 
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    delegate = delegates.get(delegate_id, {})
-    record = {
-        "Delegate_ID": delegate_id,
-        "name": delegate.get("name",""),
-        "committee": delegate.get("committee",""),
-        "portfolio": delegate.get("portfolio",""),
-        "scanned_by": oc_id,
-        "timestamp": timestamp
-    }
-    pending_attendance.append(record)
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        delegate = delegates.get(delegate_id, {})
+        record = {
+            "Delegate_ID": delegate_id,
+            "name": delegate.get("name", ""),
+            "committee": delegate.get("committee", ""),
+            "portfolio": delegate.get("portfolio", ""),
+            "scanned_by": oc_id,
+            "timestamp": timestamp
+        }
 
-    if len(pending_attendance) >= BATCH_SIZE:
-        flush_pending()
+        
+        attendance_cache[delegate_id] = record
+        pending_attendance.append(record)
+
+        if len(pending_attendance) >= BATCH_SIZE:
+            flush_pending()
 
     return redirect(url_for("scan", delegate_id=delegate_id))
 
@@ -165,4 +191,3 @@ def refresh_route():
 
 if __name__ == "__main__":
     app.run(debug=False)
-
