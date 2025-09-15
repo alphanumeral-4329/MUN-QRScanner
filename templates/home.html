@@ -1,14 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MUN Attendance Tracker - Home</title>
-    
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-
 <main class="home-container">
 
     <header class="home-header">
@@ -20,6 +9,7 @@
     </header>
 
     <section class="home-box">
+
         {% if delegate %}
             {% if delegate.scanned_by %}
                 <p>⁉️ Already registered!</p>
@@ -49,9 +39,9 @@
             <h1>Welcome, {{ oc_id }}!</h1>
             <p>🎯 Scan delegate QR codes to track attendance.</p>
 
-            <form action="/manual_scan" method="POST" style="margin-top: 20px;">
+            <form action="/manual_scan" method="POST" class="manual-form">
                 <input type="text" name="delegate_id" placeholder="Enter Delegate ID manually" required>
-                <button type="submit" class="validate-button">Scan</button>
+                <button type="submit" class="validate-button">📥 Manual Scan</button>
             </form>
 
             <p style="margin-top:15px;">
@@ -64,12 +54,9 @@
                 <p>🕒 Pending attendance records: {{ pending_count }}</p>
                 <a href="/flush" class="validate-button">💾 Flush to Sheets</a>
             {% endif %}
-            <a href="/refresh_cache" class="validate-button">🔄 Refresh Cache</a>
-            <a href="/logout" class="logout-button">Logout</a>
+            <a href="/logout" class="logout-button">🚪 Logout</a>
         </div>
+
     </section>
 
 </main>
-
-</body>
-</html>
