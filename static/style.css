@@ -87,7 +87,7 @@ button:hover, .btn:hover, .login-button:hover {
     padding: 10px;
     border-radius: 15px;
     border: none;
-    width: 250px;
+    width: 200px;
     background: rgba(255,255,255,0.1);
     color: #eee;
 }
