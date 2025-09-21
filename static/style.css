@@ -196,19 +196,15 @@ button:hover, .btn:hover, .login-button:hover {
 
 .navbar a { margin-left: 10px; }
 
-/* BRANDING */
 .branding {
     position: fixed;
     bottom: 10px;
     right: 10px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    opacity: 0.3;
+    opacity: 0.4; 
     pointer-events: none;
-    font-size: 0.8rem;
-    color: #eee;
     z-index: 1000;
 }
 
-.branding img { height: 25px; }
+.branding img {
+    height: 40px; 
+}
