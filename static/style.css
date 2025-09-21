@@ -11,6 +11,21 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    position: relative;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url("{{ url_for('static', filename='default.png') }}") no-repeat center center;
+    background-size: 400px;
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 0;
 }
 
 @keyframes fadeIn {
@@ -45,43 +60,69 @@ button:hover, .btn:hover, .login-button:hover {
     box-shadow: 0 8px 20px rgba(106,90,205,0.6);
 }
 
-.container {
+.container, .login-form {
     text-align: center;
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.08);
     padding: 30px;
     border-radius: 15px;
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(10px);
     animation: fadeIn 1.2s ease-in-out;
-    max-width: 700px;
     width: 90%;
-}
-
-.navbar {
-    width: 100%;
     max-width: 700px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    margin: 20px 0 0 0;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 15px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    backdrop-filter: blur(10px);
+    position: relative;
+    z-index: 1;
 }
 
-.navbar .oc-id { font-weight: bold; color: #f4f4f9; }
+.login-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    width: 100%;
+}
 
-.navbar a { margin-left: 10px; }
+.input-group { position: relative; }
+
+.input-group i {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #bbb;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 10px 10px 10px 35px;
+    border-radius: 8px;
+    border: none;
+    background: rgba(255,255,255,0.1);
+    color: #eee;
+}
+
+.input-group input::placeholder { color: #bbb; }
+
+.error-message { color: #ff5555; text-align: center; }
 
 .event-header { margin-bottom: 20px; text-align: center; }
 
-.event-name { font-size: 2.5rem; font-weight: bold; color: #f4f4f9; text-shadow: 0 0 10px #6a5acd; }
+.event-name {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #f4f4f9;
+    text-shadow: 0 0 10px #6a5acd;
+}
 
 .tagline { font-size: 1.2rem; font-style: italic; color: #b0b0d1; }
 
-.manual-form { display: flex; justify-content: center; gap: 10px; margin: 20px 0; }
+.manual-form {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 20px 0;
+}
 
 .manual-form input {
     padding: 10px;
@@ -122,48 +163,24 @@ button:hover, .btn:hover, .login-button:hover {
 
 .flush-btn { margin-top: 15px; display: inline-block; }
 
-.login-container {
+.navbar {
+    width: 100%;
+    max-width: 700px;
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    width: 100%;
-}
-
-.login-form {
-    background: rgba(255,255,255,0.08);
-    padding: 30px;
+    padding: 10px 20px;
+    margin: 20px 0 0 0;
+    background: rgba(255, 255, 255, 0.05);
     border-radius: 15px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    width: 300px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    backdrop-filter: blur(10px);
 }
 
-.input-group { position: relative; }
+.navbar .oc-id { font-weight: bold; color: #f4f4f9; }
 
-.input-group i {
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #bbb;
-}
+.navbar a { margin-left: 10px; }
 
-.input-group input {
-    width: 100%;
-    padding: 10px 10px 10px 35px;
-    border-radius: 8px;
-    border: none;
-    background: rgba(255,255,255,0.1);
-    color: #eee;
-}
-
-.input-group input::placeholder { color: #bbb; }
-
-.error-message { color: #ff5555; text-align: center; }
 .branding {
     position: fixed;
     bottom: 10px;
@@ -178,7 +195,4 @@ button:hover, .btn:hover, .login-button:hover {
     z-index: 1000;
 }
 
-.branding img {
-    height: 25px;
-}
-
+.branding img { height: 25px; }
