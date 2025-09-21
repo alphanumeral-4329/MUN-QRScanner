@@ -3,6 +3,7 @@ import gspread
 import os, json
 from google.oauth2.service_account import Credentials
 from datetime import datetime, timedelta
+import threading, time
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "fallback_secret")
@@ -21,10 +22,8 @@ master_sheet = client.open("Master_Sheet").worksheet("Sheet1")
 attendance_sheet = client.open("Attendance_Log").worksheet("Sheet1")
 ocs_sheet = client.open("OC_Details").worksheet("Sheet1")
 
-# Load OC credentials
 oc_list = {r["OC_ID"]: r["Password"] for r in ocs_sheet.get_all_records()}
 
-# Load delegates once
 delegates = {
     r["Delegate_ID"]: {
         "name": r["Name"],
@@ -37,7 +36,6 @@ delegates = {
     for r in master_sheet.get_all_records()
 }
 
-# Load attendance cache once
 attendance_cache = {r["Delegate_ID"]: r for r in attendance_sheet.get_all_records()}
 pending_attendance = []
 
@@ -49,7 +47,11 @@ def flush_pending():
         return 0
     rows = [[r["Delegate_ID"], r["name"], r["committee"], r.get("portfolio",""), r["scanned_by"], r["timestamp"]]
             for r in pending_attendance]
-    attendance_sheet.append_rows(rows)
+    try:
+        attendance_sheet.append_rows(rows)
+    except Exception as e:
+        print(f"Error flushing to Sheets: {e}")
+        return 0
     for r in pending_attendance:
         attendance_cache[r["Delegate_ID"]] = r
     flushed_count = len(pending_attendance)
@@ -60,6 +62,16 @@ def refresh_cache():
     global attendance_cache
     records = attendance_sheet.get_all_records()
     attendance_cache = {r["Delegate_ID"]: r for r in records}
+
+def auto_flush(interval=10):
+    while True:
+        time.sleep(interval)
+        try:
+            flushed = flush_pending()
+            if flushed > 0:
+                print(f"Auto-flushed {flushed} records to Sheets")
+        except Exception as e:
+            print(f"Auto-flush error: {e}")
 
 @app.route("/")
 def home():
@@ -94,7 +106,6 @@ def scan(delegate_id):
     delegate = delegates.get(delegate_id)
     if not delegate:
         return f"❌ Delegate {delegate_id} not found."
-
     cached_record = attendance_cache.get(delegate_id)
     scanned_delegate = {
         "name": delegate["name"],
@@ -115,7 +126,6 @@ def validate(delegate_id):
     oc_id = session["oc_id"]
     if delegate_id in attendance_cache or any(r["Delegate_ID"]==delegate_id for r in pending_attendance):
         return redirect(url_for("scan", delegate_id=delegate_id))
-
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     delegate = delegates[delegate_id]
     record = {
@@ -127,10 +137,9 @@ def validate(delegate_id):
         "timestamp": timestamp
     }
     pending_attendance.append(record)
-
+    attendance_cache[delegate_id] = record
     if len(pending_attendance) >= BATCH_SIZE:
         flush_pending()
-
     return redirect(url_for("scan", delegate_id=delegate_id))
 
 @app.route("/manual_scan", methods=["POST"])
@@ -159,4 +168,6 @@ def refresh_route():
     return redirect(url_for("home"))
 
 if __name__=="__main__":
+    thread = threading.Thread(target=auto_flush, args=(10,), daemon=True)
+    thread.start()
     app.run(debug=False)
