@@ -156,7 +156,7 @@ def flush_route():
     if "oc_id" not in session:
         return redirect(url_for("login"))
     count = flush_pending()
-    flash(f"✅ Flushed {count} pending attendance records to Google Sheets.")
+    flash(f"✅ Pushed {count} pending attendance records to Google Sheets.")
     return redirect(url_for("home"))
 
 @app.route("/refresh_cache")
