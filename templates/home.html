@@ -41,7 +41,7 @@
     </form>
 
     <p>Pending Attendance Records: {{ pending_count }}</p>
-    <a href="{{ url_for('flush_route') }}" class="btn flush-btn">Flush to Google Sheets</a>
+    <a href="{{ url_for('flush_route') }}" class="btn flush-btn">Push to Google Sheets</a>
 
     {% with messages = get_flashed_messages() %}
       {% if messages %}
