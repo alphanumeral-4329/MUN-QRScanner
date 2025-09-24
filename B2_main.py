@@ -3,11 +3,17 @@ import gspread
 import os, json
 from google.oauth2.service_account import Credentials
 from datetime import datetime, timedelta
-import threading, time
+import redis, time
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "fallback_secret")
 app.permanent_session_lifetime = timedelta(days=1)
+
+redis_client = redis.Redis(
+    host=os.environ.get("REDIS_HOST", "localhost"),
+    port=int(os.environ.get("REDIS_PORT", 6379)),
+    decode_responses=True
+)
 
 SCOPE = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -36,48 +42,47 @@ delegates = {
     for r in master_sheet.get_all_records()
 }
 
-attendance_cache = {r["Delegate_ID"]: r for r in attendance_sheet.get_all_records()}
-pending_attendance = []
-
-BATCH_SIZE = 50
-
 def flush_pending():
-    global pending_attendance
-    if not pending_attendance:
-        return 0
-    rows = [[r["Delegate_ID"], r["name"], r["committee"], r.get("portfolio",""), r["scanned_by"], r["timestamp"]]
-            for r in pending_attendance]
-    try:
+    rows = []
+    while True:
+        record_json = redis_client.lpop("pending_attendance")
+        if not record_json:
+            break
+        r = json.loads(record_json)
+        rows.append([
+            r["Delegate_ID"], r["name"], r["committee"],
+            r.get("portfolio",""), r["scanned_by"], r["timestamp"]
+        ])
+    if rows:
         attendance_sheet.append_rows(rows)
-    except Exception as e:
-        print(f"Error flushing to Sheets: {e}")
-        return 0
-    for r in pending_attendance:
-        attendance_cache[r["Delegate_ID"]] = r
-    flushed_count = len(pending_attendance)
-    pending_attendance = []
-    return flushed_count
+        for r in rows:
+            redis_client.hset("attendance_cache", r[0], json.dumps({
+                "Delegate_ID": r[0],
+                "name": r[1],
+                "committee": r[2],
+                "portfolio": r[3],
+                "scanned_by": r[4],
+                "timestamp": r[5]
+            }))
+    return len(rows)
 
 def refresh_cache():
-    global attendance_cache
     records = attendance_sheet.get_all_records()
-    attendance_cache = {r["Delegate_ID"]: r for r in records}
+    redis_client.delete("attendance_cache")
+    for r in records:
+        redis_client.hset("attendance_cache", r["Delegate_ID"], json.dumps(r))
 
 def auto_flush(interval=10):
     while True:
         time.sleep(interval)
-        try:
-            flushed = flush_pending()
-            if flushed > 0:
-                print(f"Auto-flushed {flushed} records to Sheets")
-        except Exception as e:
-            print(f"Auto-flush error: {e}")
+        flush_pending()
 
 @app.route("/")
 def home():
     if "oc_id" not in session:
         return redirect(url_for("login"))
-    return render_template("home.html", oc_id=session["oc_id"], delegate=None, delegate_id=None, pending_count=len(pending_attendance))
+    return render_template("home.html", oc_id=session["oc_id"], delegate=None, delegate_id=None,
+                           pending_count=redis_client.llen("pending_attendance"))
 
 @app.route("/login", methods=["GET","POST"])
 def login():
@@ -106,7 +111,8 @@ def scan(delegate_id):
     delegate = delegates.get(delegate_id)
     if not delegate:
         return f"❌ Delegate {delegate_id} not found."
-    cached_record = attendance_cache.get(delegate_id)
+    cached_record_json = redis_client.hget("attendance_cache", delegate_id)
+    cached_record = json.loads(cached_record_json) if cached_record_json else None
     scanned_delegate = {
         "name": delegate["name"],
         "country": delegate.get("country",""),
@@ -117,14 +123,16 @@ def scan(delegate_id):
         "scanned_by": cached_record["scanned_by"] if cached_record else None,
         "timestamp": cached_record["timestamp"] if cached_record else None
     }
-    return render_template("home.html", delegate=scanned_delegate, delegate_id=delegate_id, oc_id=oc_id, pending_count=len(pending_attendance))
+    return render_template("home.html", delegate=scanned_delegate, delegate_id=delegate_id, oc_id=oc_id,
+                           pending_count=redis_client.llen("pending_attendance"))
 
 @app.route("/validate/<delegate_id>", methods=["POST"])
 def validate(delegate_id):
     if "oc_id" not in session:
         return redirect(url_for("login"))
     oc_id = session["oc_id"]
-    if delegate_id in attendance_cache or any(r["Delegate_ID"]==delegate_id for r in pending_attendance):
+    if redis_client.hexists("attendance_cache", delegate_id) or \
+       any(json.loads(r)["Delegate_ID"]==delegate_id for r in redis_client.lrange("pending_attendance",0,-1)):
         return redirect(url_for("scan", delegate_id=delegate_id))
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     delegate = delegates[delegate_id]
@@ -136,9 +144,9 @@ def validate(delegate_id):
         "scanned_by": oc_id,
         "timestamp": timestamp
     }
-    pending_attendance.append(record)
-    attendance_cache[delegate_id] = record
-    if len(pending_attendance) >= BATCH_SIZE:
+    redis_client.rpush("pending_attendance", json.dumps(record))
+    redis_client.hset("attendance_cache", delegate_id, json.dumps(record))
+    if redis_client.llen("pending_attendance") >= 50:
         flush_pending()
     return redirect(url_for("scan", delegate_id=delegate_id))
 
@@ -168,6 +176,7 @@ def refresh_route():
     return redirect(url_for("home"))
 
 if __name__=="__main__":
+    import threading
     thread = threading.Thread(target=auto_flush, args=(10,), daemon=True)
     thread.start()
     app.run(debug=False)
