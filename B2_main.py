@@ -114,7 +114,6 @@ def scan(delegate_id):
     cached_record = json.loads(cached_record_json) if cached_record_json else None
     scanned_delegate = {
         "name": delegate["name"],
-        "country": delegate.get("country",""),
         "committee": delegate["committee"],
         "portfolio": delegate.get("portfolio",""),
         "liability_form": delegate.get("liability_form",""),
