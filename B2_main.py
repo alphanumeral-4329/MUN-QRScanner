@@ -33,7 +33,7 @@ oc_list = {r["OC_ID"]: r["Password"] for r in ocs_sheet.get_all_records()}
 delegates = {
     r["Delegate_ID"]: {
         "name": r["Name"],
-        "committee": r["Comittee"],
+        "committee": r["Committee"],
         "portfolio": r.get("Portfolio", ""),
         "liability_form": r.get("Liability_Form", ""),
         "transport_form": r.get("Transport_Form", "")
