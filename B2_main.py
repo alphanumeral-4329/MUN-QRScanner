@@ -10,7 +10,7 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY", "fallback_secret")
 app.permanent_session_lifetime = timedelta(days=1)
 
 redis_client = redis.Redis(
-    host=os.environ.get("REDIS_HOST", "redis://red-d3joasmr433s739fqv00:6379"),
+    host=os.environ.get("REDIS_HOST", "red-d3joasmr433s739fqv00:6379"),
     port=int(os.environ.get("REDIS_PORT", 6379)),
     decode_responses=True
 )
@@ -29,6 +29,7 @@ attendance_sheet = client.open("Attendance_Log").worksheet("Sheet1")
 ocs_sheet = client.open("OC_Details").worksheet("Sheet1")
 
 oc_list = {r["OC_ID"]: r["Password"] for r in ocs_sheet.get_all_records()}
+print("Loaded OC credentials:", oc_list)
 
 delegates = {
     r["Delegate_ID"]: {
@@ -86,18 +87,22 @@ def home():
 @app.route("/login", methods=["GET","POST"])
 def login():
     error = None
-    if request.method=="POST":
+    if request.method == "POST":
         oc_id = request.form.get("oc_id")
         password = request.form.get("password")
-        if oc_id in oc_list and oc_list[oc_id]==password:
-            session.permanent=True
-            session["oc_id"]=oc_id
+        print("Received:", request.form)
+        print("Redis ping:", redis_client.ping())
+
+        if oc_id in oc_list and oc_list[oc_id] == password:
+            session.permanent = True
+            session["oc_id"] = oc_id
+            print(f"✅ Login success for {oc_id}")
             return redirect(url_for("home"))
         else:
-            error="Invalid Credentials"
+            error = "Invalid Credentials"
+            print(f"❌ Login failed for {oc_id}")
     return render_template("login.html", error=error)
-    print("Received:", request.form)
-print("Redis ping:", redis_client.ping())
+
 
 
 @app.route("/logout")
