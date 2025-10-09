@@ -28,7 +28,7 @@ master_sheet = client.open("Master_Sheet").worksheet("Sheet1")
 attendance_sheet = client.open("Attendance_Log").worksheet("Sheet1")
 ocs_sheet = client.open("OC_Details").worksheet("Sheet1")
 
-oc_list = {r["OC_ID"]: r["Password"] for r in ocs_sheet.get_all_records()}
+oc_list = {str(r["OC_ID"]).strip(): r["Password"].strip() for r in ocs_sheet.get_all_records()}
 print("Loaded OC credentials:", oc_list)
 
 delegates = {
