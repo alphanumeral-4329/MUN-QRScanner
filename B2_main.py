@@ -32,7 +32,7 @@ oc_list = {str(r["OC_ID"]).strip(): r["Password"].strip() for r in ocs_sheet.get
 print("Loaded OC credentials:", oc_list)
 
 delegates = {
-    r["Delegate_ID"]: {
+    str(r["Delegate_ID"]).strip(): {
         "name": r["Name"],
         "committee": r["Committee"],
         "portfolio": r.get("Portfolio", ""),
