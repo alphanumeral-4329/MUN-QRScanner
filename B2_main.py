@@ -96,6 +96,9 @@ def login():
         else:
             error="Invalid Credentials"
     return render_template("login.html", error=error)
+    print("Received:", request.form)
+print("Redis ping:", redis_client.ping())
+
 
 @app.route("/logout")
 def logout():
