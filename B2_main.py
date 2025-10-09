@@ -92,7 +92,10 @@ def login():
         password = request.form.get("password")
         print("Received:", request.form)
         print("Redis ping:", redis_client.ping())
-
+        print("oc_id type:", type(oc_id), "value:", repr(oc_id))
+        print("oc_list keys:", list(oc_list.keys()))
+        print("Password entered:", password, "Stored:", oc_list.get(oc_id))
+        
         if oc_id in oc_list and oc_list[oc_id] == password:
             session.permanent = True
             session["oc_id"] = oc_id
