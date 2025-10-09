@@ -10,7 +10,7 @@ app.secret_key = os.environ.get("FLASK_SECRET_KEY", "fallback_secret")
 app.permanent_session_lifetime = timedelta(days=1)
 
 redis_client = redis.Redis(
-    host=os.environ.get("REDIS_HOST", "red-d3joasmr433s739fqv00:6379"),
+    host=os.environ.get("REDIS_HOST", "red-d3joasmr433s739fqv00"),
     port=int(os.environ.get("REDIS_PORT", 6379)),
     decode_responses=True
 )
