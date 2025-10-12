@@ -50,22 +50,43 @@ def flush_pending():
         if not record_json:
             break
         r = json.loads(record_json)
+        print("Pushing record:", r)
         rows.append([
-            r["Delegate_ID"], r["name"], r["committee"],
-            r.get("portfolio",""), r["scanned_by"], r["timestamp"]
+            str(r["Delegate_ID"]).strip(),
+            r["name"],
+            r["committee"],
+            r.get("portfolio", ""),
+            str(r["scanned_by"]).strip(),
+            r["timestamp"]
         ])
-    if rows:
+
+if rows:
+    print(f"Collected {len(rows)} rows for push.")
+    print("Appending rows to Sheets:", rows)
+    try:
         attendance_sheet.append_rows(rows)
-        for r in rows:
-            redis_client.hset("attendance_cache", r[0], json.dumps({
-                "Delegate_ID": r[0],
-                "name": r[1],
-                "committee": r[2],
-                "portfolio": r[3],
-                "scanned_by": r[4],
-                "timestamp": r[5]
-            }))
+        print("Rows appended")
+    except Exception as e:
+        print("Rows not appended:", e)
+
+    for r in rows:
+        redis_client.hset("attendance_cache", r[0], json.dumps({
+            "Delegate_ID": r[0],
+            "name": r[1],
+            "committee": r[2],
+            "portfolio": r[3],
+            "scanned_by": r[4],
+            "timestamp": r[5]
+        }))
+else:
+    print("No pending rows")
+
+
+    print("Pending records:", redis_client.llen("pending_attendance"))
+    print("Attendance cache size:", redis_client.hlen("attendance_cache"))
     return len(rows)
+
+
 
 def refresh_cache():
     records = attendance_sheet.get_all_records()
