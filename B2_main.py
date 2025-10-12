@@ -3,6 +3,7 @@ import gspread
 import os, json
 from google.oauth2.service_account import Credentials
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 import redis, time
 
 app = Flask(__name__)
@@ -143,7 +144,7 @@ def validate(delegate_id):
     if redis_client.hexists("attendance_cache", delegate_id) or \
        any(json.loads(r)["Delegate_ID"]==delegate_id for r in redis_client.lrange("pending_attendance",0,-1)):
         return redirect(url_for("scan", delegate_id=delegate_id))
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    timestamp = datetime.now(ZoneInfo("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S")
     delegate = delegates[delegate_id]
     record = {
         "Delegate_ID": delegate_id,
