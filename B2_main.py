@@ -84,7 +84,7 @@ else:
 
     print("Pending records:", redis_client.llen("pending_attendance"))
     print("Attendance cache size:", redis_client.hlen("attendance_cache"))
-    return len(rows)
+        return len(rows)
 
 
 
