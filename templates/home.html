@@ -10,6 +10,10 @@
 </head>
 <body>
     <div class="container">
+        <div id="qr-reader-container">
+            <video id="qr-video" autoplay playsinline></video>
+            <canvas id="qr-canvas" hidden></canvas>
+            <p id="QR Status"></p>
 
         {% if delegate %}
         <div class="delegate-card">
