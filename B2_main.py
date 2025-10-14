@@ -105,15 +105,30 @@ def scan(delegate_id):
         return f"❌ Delegate {delegate_id} not found."
     cached_record_json = redis_client.hget("attendance_cache", delegate_id)
     cached_record = json.loads(cached_record_json) if cached_record_json else None
+    status = "already" if cached_record else "success" if delegate else None
     scanned_delegate = {
         "name": delegate["name"],
         "committee": delegate["committee"],
         "portfolio": delegate.get("portfolio",""),
         "liability_form": delegate.get("liability_form",""),
         "transport_form": delegate.get("transport_form",""),
-        "scanned_by": cached_record["scanned_by"] if cached_record else None,
-        "timestamp": cached_record["timestamp"] if cached_record else None
+        "scanned_by": cached_record["scanned_by"] if cached_record else oc_id,
+        "timestamp": cached_record["timestamp"] if cached_record else datetime.now(ZoneInfo("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"),
+        "status": status
     }
+    if not cached_record:
+        record = {
+            "Delegate_ID": delegate_id,
+            "name": delegate["name"],
+            "committee": delegate["committee"],
+            "portfolio": delegate.get("portfolio",""),
+            "scanned_by": oc_id,
+            "timestamp": scanned_delegate["timestamp"]
+        }
+        redis_client.rpush("pending_attendance", json.dumps(record))
+        redis_client.hset("attendance_cache", delegate_id, json.dumps(record))
+        if redis_client.llen("pending_attendance") >= 50:
+            flush_pending()
     return render_template("home.html", delegate=scanned_delegate, delegate_id=delegate_id, oc_id=oc_id)
 
 @app.route("/validate/<delegate_id>", methods=["POST"])
