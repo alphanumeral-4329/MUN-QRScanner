@@ -10,7 +10,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     position: relative;
 }
 
@@ -124,11 +124,7 @@ button:hover, .btn:hover, .login-button:hover {
     text-shadow: 0 0 10px #6a5acd;
 }
 
-.tagline { 
-    font-size: 1.2rem; 
-    font-style: italic; 
-    color: #b0b0d1; 
-}
+.tagline { font-size: 1.2rem; font-style: italic; color: #b0b0d1; }
 
 .manual-form {
     display: flex;
@@ -208,9 +204,7 @@ button:hover, .btn:hover, .login-button:hover {
     z-index: 1000;
 }
 
-.branding img { 
-    height: 50px; 
-}
+.branding img { height: 50px; }
 
 #flash-container {
     position: fixed;
