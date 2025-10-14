@@ -18,30 +18,40 @@
                 <canvas id="qr-canvas" hidden></canvas>
                 <p id="qr-status"></p>
             </div>
-{% if delegate %}
-<div class="delegate-card">
-    <span class="oc-id">Logged in as: {{ oc_id }}</span>
-    <div class="card-buttons">
-        <a href="{{ url_for('refresh_route') }}" class="btn">Refresh Cache</a>
-        <a href="{{ url_for('logout') }}" class="btn">Logout</a>
-    </div>
-    <h2>{{ delegate.name }} ({{ delegate_id }})</h2>
-    <p>Committee: {{ delegate.committee }}</p>
-    <p>Portfolio: {{ delegate.portfolio }}</p>
-    <p>Liability Form: {{ delegate.liability_form }}</p>
-    <p>Transport Form: {{ delegate.transport_form }}</p>
 
-    {% if delegate.status == "success" %}
-        <p class="scanned">✅ Scan successful by {{ delegate.scanned_by }} at {{ delegate.timestamp }}</p>
-    {% elif delegate.status == "already" %}
-        <p class="scanned">⚠️ Already scanned by {{ delegate.scanned_by }} at {{ delegate.timestamp }}</p>
-    {% else %}
-        <form method="POST" action="{{ url_for('validate', delegate_id=delegate_id) }}">
-            <button type="submit">Confirm Attendance</button>
-        </form>
-    {% endif %}
-</div>
-{% endif %}
+            <div id="manual-scan-container">
+                <form id="manual-scan-form">
+                    <input type="text" id="manual-delegate-id" placeholder="Enter Delegate ID" required>
+                    <button type="submit">Submit</button>
+                </form>
+            </div>
+
+            <div id="flash-container"></div>
+
+            {% if delegate %}
+            <div class="delegate-card">
+                <span class="oc-id">Logged in as: {{ oc_id }}</span>
+                <div class="card-buttons">
+                    <a href="{{ url_for('refresh_route') }}" class="btn">Refresh Cache</a>
+                    <a href="{{ url_for('logout') }}" class="btn">Logout</a>
+                </div>
+                <h2>{{ delegate.name }} ({{ delegate_id }})</h2>
+                <p>Committee: {{ delegate.committee }}</p>
+                <p>Portfolio: {{ delegate.portfolio }}</p>
+                <p>Liability Form: {{ delegate.liability_form }}</p>
+                <p>Transport Form: {{ delegate.transport_form }}</p>
+
+                {% if delegate.status == "success" %}
+                    <p class="scanned">✅ Scan successful by {{ delegate.scanned_by }} at {{ delegate.timestamp }}</p>
+                {% elif delegate.status == "already" %}
+                    <p class="scanned">⚠️ Already scanned by {{ delegate.scanned_by }} at {{ delegate.timestamp }}</p>
+                {% else %}
+                    <form method="POST" action="{{ url_for('validate', delegate_id=delegate_id) }}">
+                        <button type="submit">Confirm Attendance</button>
+                    </form>
+                {% endif %}
+            </div>
+            {% endif %}
 
         </div>
     </div>
