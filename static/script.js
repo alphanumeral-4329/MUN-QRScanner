@@ -1,5 +1,3 @@
-<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-<script>
 document.addEventListener("DOMContentLoaded", function() {
     const video = document.getElementById("qr-video");
     const canvas = document.getElementById("qr-canvas");
@@ -16,7 +14,9 @@ document.addEventListener("DOMContentLoaded", function() {
             video.play();
             requestAnimationFrame(scanLoop);
         })
-        .catch(err => { status.innerText = "Camera error: " + err; });
+        .catch(err => {
+            status.innerText = "Camera error: " + err;
+        });
 
     function scanLoop() {
         if (video.readyState === video.HAVE_ENOUGH_DATA) {
@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
             scannedDelegates.add(delegateId);
             showFlash(`Delegate ${delegateId} scanned successfully`, 'success');
-        } catch (err) {
+        } catch {
             showFlash(`Error scanning delegate ${delegateId}`, 'error');
         }
     }
