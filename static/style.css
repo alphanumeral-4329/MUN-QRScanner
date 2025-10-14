@@ -5,13 +5,12 @@ body {
     animation: gradientBG 15s ease infinite, fadeIn 1s ease-in-out;
     color: #eee;
     margin: 0;
-    padding: 0;
+    padding: 20px 0;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    position: relative;
 }
 
 body::before {
@@ -131,19 +130,37 @@ button:hover, .btn:hover, .login-button:hover {
     justify-content: center;
     gap: 10px;
     margin: 20px 0;
+    width: 90%;
+    max-width: 400px;
 }
 
 .manual-form input {
+    flex: 1;
     padding: 10px;
     border-radius: 15px;
     border: none;
-    width: 200px;
     background: rgba(255,255,255,0.1);
     color: #eee;
     box-sizing: border-box;
 }
 
 .manual-form input::placeholder { color: #bbb; }
+
+.manual-form button {
+    padding: 10px 20px;
+    border-radius: 15px;
+    border: none;
+    background: linear-gradient(90deg, #6a5acd, #836fff);
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.manual-form button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(106,90,205,0.6);
+}
 
 .delegate-card {
     background: rgba(255, 255, 255, 0.08);
@@ -163,48 +180,37 @@ button:hover, .btn:hover, .login-button:hover {
 
 .delegate-card .scanned { color: #4ade80; font-weight: bold; }
 
-.flash-messages { margin-top: 20px; }
+.delegate-card .scanned-warning { color: #ffc107; font-weight: bold; }
 
-.flash-messages p {
-    background: rgba(255, 255, 255, 0.15);
-    padding: 10px;
-    border-radius: 8px;
-    color: #eee;
-    animation: fadeIn 0.5s ease-in-out;
-    text-align: center;
-}
-
-.flush-btn { margin-top: 15px; display: inline-block; }
-
-.navbar {
-    width: 100%;
-    max-width: 700px;
+#qr-reader-container {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    margin: 20px 0 0 0;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 15px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    backdrop-filter: blur(10px);
-}
-
-.navbar .left, .navbar .right {
-    display: flex;
+    flex-direction: column;
     align-items: center;
     gap: 10px;
+    padding: 15px;
+    background: rgba(0,0,0,0.5);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
 }
 
-.branding {
-    position: fixed;
-    bottom: 10px;
-    right: 10px;
-    pointer-events: none;
-    z-index: 1000;
+#qr-video {
+    width: 100%;
+    max-width: 360px;
+    border-radius: 10px;
+    border: 2px solid #fff;
+    background: #000;
 }
 
-.branding img { height: 50px; }
+#qr-status {
+    width: 100%;
+    text-align: center;
+    font-weight: bold;
+    color: #fff;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.4);
+}
 
 #flash-container {
     position: fixed;
@@ -231,25 +237,22 @@ button:hover, .btn:hover, .login-button:hover {
 @keyframes fadein { from {opacity:0;} to {opacity:1;} }
 @keyframes fadeout { from {opacity:1;} to {opacity:0;} }
 
-#qr-reader-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    padding: 10px;
-    background: rgba(0,0,0,0.5);
-    border-radius: 12px;
-}
-
-#qr-video {
+.navbar {
     width: 100%;
-    max-width: 400px;
-    border-radius: 10px;
-    background: #000;
-    border: 2px solid #fff;
+    max-width: 700px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    margin: 20px 0 0 0;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    backdrop-filter: blur(10px);
 }
 
-#qr-status {
-    font-weight: bold;
-    color: #fff;
-}
+.navbar .left, .navbar .right { display: flex; align-items: center; gap: 10px; }
+
+.branding { position: fixed; bottom: 10px; right: 10px; pointer-events: none; z-index: 1000; }
+
+.branding img { height: 50px; }
