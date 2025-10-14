@@ -1,9 +1,9 @@
+import os
 from flask import Flask, request, render_template, redirect, url_for, session, flash, jsonify, render_template_string
-import gspread, os, json
+import gspread, json, redis
 from google.oauth2.service_account import Credentials
 from datetime import datetime
 from zoneinfo import ZoneInfo
-import redis
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "fallback_secret")
@@ -35,6 +35,8 @@ delegates = {
     }
     for r in master_sheet.get_all_records()
 }
+
+DEBUG_MODE = os.environ.get("DEBUG_MODE", "False") == "True"
 
 def flush_pending():
     rows = []
@@ -162,39 +164,6 @@ def scan(delegate_id):
 
     return jsonify({"delegateHTML": delegate_html, "message": message, "success": success, "scan_count": session["scan_count"]})
 
-@app.route("/validate/<delegate_id>", methods=["POST"])
-def validate(delegate_id):
-    if "oc_id" not in session:
-        return redirect(url_for("login"))
-    oc_id = session["oc_id"]
-    if redis_client.hexists("attendance_cache", delegate_id) or \
-       any(json.loads(r)["Delegate_ID"]==delegate_id for r in redis_client.lrange("pending_attendance",0,-1)):
-        return redirect(url_for("scan", delegate_id=delegate_id))
-    timestamp = datetime.now(ZoneInfo("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S")
-    delegate = delegates[delegate_id]
-    record = {
-        "Delegate_ID": delegate_id,
-        "name": delegate["name"],
-        "committee": delegate["committee"],
-        "portfolio": delegate.get("portfolio",""),
-        "scanned_by": oc_id,
-        "timestamp": timestamp
-    }
-    redis_client.rpush("pending_attendance", json.dumps(record))
-    redis_client.hset("attendance_cache", delegate_id, json.dumps(record))
-    if redis_client.llen("pending_attendance") >= 50:
-        flush_pending()
-    return redirect(url_for("scan", delegate_id=delegate_id))
-
-@app.route("/manual_scan", methods=["POST"])
-def manual_scan():
-    if "oc_id" not in session:
-        return redirect(url_for("login"))
-    delegate_id = request.form.get("delegate_id").strip()
-    if delegate_id not in delegates:
-        return f"❌ Delegate {delegate_id} not found."
-    return redirect(url_for("scan", delegate_id=delegate_id))
-
 @app.route("/refresh_cache")
 def refresh_route():
     if "oc_id" not in session:
@@ -203,11 +172,11 @@ def refresh_route():
     flash("🔄 Attendance cache refreshed from Google Sheets.")
     return redirect(url_for("home"))
 
-@app.route("/debug/redis")
-def debug_redis():
-    if "oc_id" not in session:
-        return "Not logged in", 401
-    try:
+if DEBUG_MODE:
+    @app.route("/debug/redis")
+    def debug_redis():
+        if "oc_id" not in session:
+            return "Not logged in", 401
         total_keys = redis_client.dbsize()
         cache_count = redis_client.hlen("attendance_cache")
         pending_count = redis_client.llen("pending_attendance")
@@ -216,20 +185,15 @@ def debug_redis():
             f"Total keys in Redis: {total_keys}<br>"
             f"Delegates in attendance_cache: {cache_count}<br>"
             f"Pending attendance records: {pending_count}<br>"
-            f"Your scan_count this session: {scan_count}"
+            f"Your session scan_count: {scan_count}"
         )
-    except Exception as e:
-        return f"Error accessing Redis: {e}", 500
 
-
-@app.route("/flush_cache")
-def flush_cache_route():
-    if "oc_id" not in session:
-        return "Not logged in", 401
-    redis_client.delete("attendance_cache")
-    return "✅ attendance_cache cleared"
-
-
+    @app.route("/flush_cache")
+    def flush_cache_route():
+        if "oc_id" not in session:
+            return "Not logged in", 401
+        redis_client.delete("attendance_cache")
+        return "✅ attendance_cache cleared"
 
 if __name__=="__main__":
     app.run(debug=False)
