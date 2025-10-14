@@ -1,14 +1,12 @@
 from flask import Flask, request, render_template, redirect, url_for, session, flash
-import gspread
-import os, json
+import gspread, os, json
 from google.oauth2.service_account import Credentials
-from datetime import datetime, timedelta
+from datetime import datetime
 from zoneinfo import ZoneInfo
-import redis, time
+import redis
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "fallback_secret")
-app.permanent_session_lifetime = timedelta(days=1)
 
 redis_client = redis.Redis(
     host=os.environ.get("REDIS_HOST", "red-d3joasmr433s739fqv00"),
@@ -16,11 +14,7 @@ redis_client = redis.Redis(
     decode_responses=True
 )
 
-SCOPE = [
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive"
-]
-
+SCOPE = ["https://www.googleapis.com/auth/spreadsheets","https://www.googleapis.com/auth/drive"]
 service_account_info = json.loads(os.environ['GOOGLE_SERVICE_ACCOUNT_JSON'])
 creds = Credentials.from_service_account_info(service_account_info, scopes=SCOPE)
 client = gspread.authorize(creds)
@@ -30,7 +24,6 @@ attendance_sheet = client.open("Attendance_Log").worksheet("Sheet1")
 ocs_sheet = client.open("OC_Details").worksheet("Sheet1")
 
 oc_list = {str(r["OC_ID"]).strip(): r["Password"].strip() for r in ocs_sheet.get_all_records()}
-print("Loaded OC credentials:", oc_list)
 
 delegates = {
     str(r["Delegate_ID"]).strip(): {
@@ -50,7 +43,6 @@ def flush_pending():
         if not record_json:
             break
         r = json.loads(record_json)
-        print("Pushing record:", r)
         rows.append([
             str(r["Delegate_ID"]).strip(),
             r["name"],
@@ -59,16 +51,8 @@ def flush_pending():
             str(r["scanned_by"]).strip(),
             r["timestamp"]
         ])
-
     if rows:
-        print(f"Collected {len(rows)} rows for push.")
-        print("Appending rows to Sheets:", rows)
-        try:
-            attendance_sheet.append_rows(rows)
-            print("✅ Rows appended successfully.")
-        except Exception as e:
-            print("❌ Rows not appended:", e)
-
+        attendance_sheet.append_rows(rows)
         for r in rows:
             redis_client.hset("attendance_cache", r[0], json.dumps({
                 "Delegate_ID": r[0],
@@ -78,16 +62,7 @@ def flush_pending():
                 "scanned_by": r[4],
                 "timestamp": r[5]
             }))
-    else:
-        print("No pending rows found to push.")
-
-    print("Pending count after flush:", redis_client.llen("pending_attendance"))
-    print("Cache size after flush:", redis_client.hlen("attendance_cache"))
-
     return len(rows)
-
-
-
 
 def refresh_cache():
     records = attendance_sheet.get_all_records()
@@ -95,17 +70,11 @@ def refresh_cache():
     for r in records:
         redis_client.hset("attendance_cache", r["Delegate_ID"], json.dumps(r))
 
-def auto_flush(interval=10):
-    while True:
-        time.sleep(interval)
-        flush_pending()
-
 @app.route("/")
 def home():
     if "oc_id" not in session:
         return redirect(url_for("login"))
-    return render_template("home.html", oc_id=session["oc_id"], delegate=None, delegate_id=None,
-                           pending_count=redis_client.llen("pending_attendance"))
+    return render_template("home.html", oc_id=session["oc_id"], delegate=None, delegate_id=None)
 
 @app.route("/login", methods=["GET","POST"])
 def login():
@@ -113,23 +82,13 @@ def login():
     if request.method == "POST":
         oc_id = request.form.get("oc_id")
         password = request.form.get("password")
-        print("Received:", request.form)
-        print("Redis ping:", redis_client.ping())
-        print("oc_id type:", type(oc_id), "value:", repr(oc_id))
-        print("oc_list keys:", list(oc_list.keys()))
-        print("Password entered:", password, "Stored:", oc_list.get(oc_id))
-        
         if oc_id in oc_list and oc_list[oc_id] == password:
             session.permanent = True
             session["oc_id"] = oc_id
-            print(f"✅ Login success for {oc_id}")
             return redirect(url_for("home"))
         else:
             error = "Invalid Credentials"
-            print(f"❌ Login failed for {oc_id}")
     return render_template("login.html", error=error)
-
-
 
 @app.route("/logout")
 def logout():
@@ -155,8 +114,7 @@ def scan(delegate_id):
         "scanned_by": cached_record["scanned_by"] if cached_record else None,
         "timestamp": cached_record["timestamp"] if cached_record else None
     }
-    return render_template("home.html", delegate=scanned_delegate, delegate_id=delegate_id, oc_id=oc_id,
-                           pending_count=redis_client.llen("pending_attendance"))
+    return render_template("home.html", delegate=scanned_delegate, delegate_id=delegate_id, oc_id=oc_id)
 
 @app.route("/validate/<delegate_id>", methods=["POST"])
 def validate(delegate_id):
@@ -191,14 +149,6 @@ def manual_scan():
         return f"❌ Delegate {delegate_id} not found."
     return redirect(url_for("scan", delegate_id=delegate_id))
 
-@app.route("/flush")
-def flush_route():
-    if "oc_id" not in session:
-        return redirect(url_for("login"))
-    count = flush_pending()
-    flash(f"✅ Pushed {count} pending attendance records to Google Sheets.")
-    return redirect(url_for("home"))
-
 @app.route("/refresh_cache")
 def refresh_route():
     if "oc_id" not in session:
@@ -208,7 +158,4 @@ def refresh_route():
     return redirect(url_for("home"))
 
 if __name__=="__main__":
-    import threading
-    thread = threading.Thread(target=auto_flush, args=(10,), daemon=True)
-    thread.start()
     app.run(debug=False)
