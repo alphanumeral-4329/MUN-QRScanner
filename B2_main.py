@@ -114,9 +114,9 @@ def scan(delegate_id):
     scanned_delegate = {
         "name": delegate["name"],
         "committee": delegate["committee"],
-        "portfolio": delegate.get("portfolio",""),
-        "liability_form": delegate.get("liability_form",""),
-        "transport_form": delegate.get("transport_form",""),
+        "portfolio": delegate.get("portfolio", ""),
+        "liability_form": delegate.get("liability_form", ""),
+        "transport_form": delegate.get("transport_form", ""),
         "scanned_by": cached_record["scanned_by"] if cached_record else oc_id,
         "timestamp": cached_record["timestamp"] if cached_record else datetime.now(ZoneInfo("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S"),
         "status": status
@@ -127,7 +127,7 @@ def scan(delegate_id):
             "Delegate_ID": delegate_id,
             "name": delegate["name"],
             "committee": delegate["committee"],
-            "portfolio": delegate.get("portfolio",""),
+            "portfolio": delegate.get("portfolio", ""),
             "scanned_by": oc_id,
             "timestamp": scanned_delegate["timestamp"]
         }
@@ -148,12 +148,10 @@ def scan(delegate_id):
         <p>Portfolio: {{ delegate.portfolio }}</p>
         <p>Liability Form: {{ delegate.liability_form }}</p>
         <p>Transport Form: {{ delegate.transport_form }}</p>
-        {% if delegate.scanned_by %}
+        {% if delegate.status == 'already' %}
             <p class="scanned">✅ Already scanned by {{ delegate.scanned_by }} at {{ delegate.timestamp }}</p>
         {% else %}
-            <form method="POST" action="{{ url_for('validate', delegate_id=delegate_id) }}">
-                <button type="submit">Confirm Attendance</button>
-            </form>
+            <p class="scanned">✅ New scan recorded by {{ delegate.scanned_by }} at {{ delegate.timestamp }}</p>
         {% endif %}
     </div>
     """, delegate=scanned_delegate, delegate_id=delegate_id, oc_id=oc_id)
@@ -162,6 +160,7 @@ def scan(delegate_id):
     success = not cached_record
 
     return jsonify({"delegateHTML": delegate_html, "message": message, "success": success})
+
 
 
 @app.route("/validate/<delegate_id>", methods=["POST"])
