@@ -207,6 +207,7 @@ def refresh_route():
     return redirect(url_for("home"))
     
     @app.route("/debug/redis")
+    @app.route("/debug/redis")
 def debug_redis():
     if "oc_id" not in session:
         return "Not logged in", 401
@@ -223,6 +224,7 @@ def debug_redis():
         )
     except Exception as e:
         return f"Error accessing Redis: {e}", 500
+
 
 
 if __name__=="__main__":
