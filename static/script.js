@@ -8,16 +8,15 @@ document.addEventListener("DOMContentLoaded", function() {
     const flashContainer = document.getElementById("flash-container");
     const scannedDelegates = new Set();
 
-navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
-.then(stream => {
-    video.srcObject = stream;
-    video.muted = true;
-    video.setAttribute("playsinline", true);
-    video.play();
-    requestAnimationFrame(scanLoop);
-})
-.catch(err => { status.innerText = "Camera error: " + err; });
-
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
+        .then(stream => {
+            video.srcObject = stream;
+            video.muted = true;
+            video.setAttribute("playsinline", true);
+            video.play();
+            requestAnimationFrame(scanLoop);
+        })
+        .catch(err => { status.innerText = "Camera error: " + err; });
 
     function scanLoop() {
         if (video.readyState === video.HAVE_ENOUGH_DATA) {
@@ -70,4 +69,3 @@ navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audi
         setTimeout(() => flash.remove(), 3000);
     }
 });
-</script>
