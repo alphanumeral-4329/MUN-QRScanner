@@ -12,61 +12,38 @@
 </head>
 <body>
     <div class="container">
-<div class="main-content">
-    <div id="qr-reader-container">
-        <video id="qr-video" autoplay playsinline></video>
-        <canvas id="qr-canvas" hidden></canvas>
-        <p id="qr-status"></p>
-    </div>
-
-    <div class="delegate-info">
-        {% if delegate %}
-        <div class="delegate-card">
-            <span class="oc-id">Logged in as: {{ oc_id }}</span>
-            <div class="card-buttons">
-                <a href="{{ url_for('refresh_route') }}" class="btn">Refresh Cache</a>
-                <a href="{{ url_for('logout') }}" class="btn">Logout</a>
+        <div class="main-content">
+            <div id="qr-reader-container">
+                <video id="qr-video" autoplay playsinline></video>
+                <canvas id="qr-canvas" hidden></canvas>
+                <p id="qr-status"></p>
             </div>
-            <h2>{{ delegate.name }} ({{ delegate_id }})</h2>
-            <p>Committee: {{ delegate.committee }}</p>
-            <p>Portfolio: {{ delegate.portfolio }}</p>
-            <p>Liability Form: {{ delegate.liability_form }}</p>
-            <p>Transport Form: {{ delegate.transport_form }}</p>
 
-            {% if delegate.scanned_by %}
-                <p class="scanned">✅ Already scanned by {{ delegate.scanned_by }} at {{ delegate.timestamp }}</p>
-            {% else %}
-                <form method="POST" action="{{ url_for('validate', delegate_id=delegate_id) }}">
-                    <button type="submit">Confirm Attendance</button>
-                </form>
-            {% endif %}
+            <div class="delegate-info">
+                {% if delegate %}
+                <div class="delegate-card">
+                    <span class="oc-id">Logged in as: {{ oc_id }}</span>
+                    <div class="card-buttons">
+                        <a href="{{ url_for('refresh_route') }}" class="btn">Refresh Cache</a>
+                        <a href="{{ url_for('logout') }}" class="btn">Logout</a>
+                    </div>
+                    <h2>{{ delegate.name }} ({{ delegate_id }})</h2>
+                    <p>Committee: {{ delegate.committee }}</p>
+                    <p>Portfolio: {{ delegate.portfolio }}</p>
+                    <p>Liability Form: {{ delegate.liability_form }}</p>
+                    <p>Transport Form: {{ delegate.transport_form }}</p>
+
+                    {% if delegate.scanned_by %}
+                        <p class="scanned">✅ Already scanned by {{ delegate.scanned_by }} at {{ delegate.timestamp }}</p>
+                    {% else %}
+                        <form method="POST" action="{{ url_for('validate', delegate_id=delegate_id) }}">
+                            <button type="submit">Confirm Attendance</button>
+                        </form>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
         </div>
-        {% endif %}
-    </div>
-</div>
-
-
-        <form method="POST" action="{{ url_for('manual_scan') }}" class="manual-form">
-            <input type="text" name="delegate_id" placeholder="Enter Delegate ID" required>
-            <button type="submit">Scan</button>
-        </form>
-
-        <p>Pending Attendance Records: {{ pending_count }}</p>
-        <a href="{{ url_for('flush_route') }}" class="btn flush-btn">Push to Google Sheets</a>
-
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
-        <div class="flash-messages">
-            {% for message in messages %}
-            <p>{{ message }}</p>
-            {% endfor %}
-        </div>
-        {% endif %}
-        {% endwith %}
-    </div>
-
-    <div class="branding">
-        <img src="{{ url_for('static', filename='cover.png') }}" alt="EventLogiX Logo">
     </div>
 </body>
 </html>
