@@ -5,44 +5,45 @@ document.addEventListener("DOMContentLoaded", function() {
     const canvas = document.getElementById("qr-canvas");
     const ctx = canvas.getContext("2d");
     const status = document.getElementById("qr-status");
+    const flashContainer = document.getElementById("flash-container");
     const scannedDelegates = new Set();
 
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
     .then(stream => {
         video.srcObject = stream;
         video.setAttribute("playsinline", true);
+        video.muted = true;
         video.play();
-        requestAnimationFrame(tick);
+        requestAnimationFrame(scanLoop);
     })
-    .catch(err => { status.innerText = "Camera error: " + err; });
+    .catch(err => showFlash(`Camera error: ${err}`, 'error'));
 
-    function tick() {
+    function scanLoop() {
         if (video.readyState === video.HAVE_ENOUGH_DATA) {
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const code = jsQR(imageData.data, imageData.width, imageData.height);
-            if (code) processQRCode(code.data);
+            if (code) handleQRCode(code.data);
         }
-        requestAnimationFrame(tick);
+        requestAnimationFrame(scanLoop);
     }
 
-    async function processQRCode(data) {
+    async function handleQRCode(data) {
         const match = data.match(/\/scan\/([^\/\s]+)/);
         const delegateId = match ? match[1] : data;
 
         if (scannedDelegates.has(delegateId)) {
-            status.innerText = `Delegate ${delegateId} already scanned`;
+            showFlash(`Delegate ${delegateId} already scanned`, 'warning');
             return;
         }
 
-        status.innerText = "Scanning: " + delegateId;
+        status.innerText = `Scanning: ${delegateId}`;
 
         try {
             const response = await fetch(`/scan/${delegateId}`);
             const html = await response.text();
-
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, "text/html");
             const newCard = doc.querySelector(".delegate-card");
@@ -54,10 +55,18 @@ document.addEventListener("DOMContentLoaded", function() {
             }
 
             scannedDelegates.add(delegateId);
+            showFlash(`Delegate ${delegateId} scanned successfully`, 'success');
         } catch (err) {
-            console.error(err);
-            status.innerText = "Error scanning: " + err;
+            showFlash(`Error scanning delegate ${delegateId}`, 'error');
         }
+    }
+
+    function showFlash(message, type='success') {
+        const flash = document.createElement("div");
+        flash.className = `flash-message flash-${type}`;
+        flash.innerText = message;
+        flashContainer.appendChild(flash);
+        setTimeout(() => flash.remove(), 3000);
     }
 });
 </script>
