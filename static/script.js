@@ -14,7 +14,7 @@ navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audi
     video.muted = true;
     video.setAttribute("playsinline", true);
     video.play();
-    requestAnimationFrame(tick);
+    requestAnimationFrame(scanLoop);
 })
 .catch(err => { status.innerText = "Camera error: " + err; });
 
