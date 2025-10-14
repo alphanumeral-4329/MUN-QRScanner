@@ -219,7 +219,7 @@ def debug_redis():
     except Exception as e:
         return f"Error accessing Redis: {e}", 500
         @app.route("/flush_cache")
-def flush_cache_route():
+    def flush_cache_route():
     if "oc_id" not in session:
         return "Not logged in", 401
     redis_client.delete("attendance_cache")
