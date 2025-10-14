@@ -237,7 +237,7 @@ button:hover, .btn:hover, .login-button:hover {
 
 .branding img {
     height: 50px;
-}
+    
 #qr-reader-container {
     display: flex;
     flex-direction: column;
@@ -245,14 +245,19 @@ button:hover, .btn:hover, .login-button:hover {
     gap: 10px;
     margin-bottom: 20px;
     z-index: 10;
+    padding: 10px;
+    background: rgba(0,0,0,0.4);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
 }
 
 #qr-video {
     width: 100%;
     max-width: 400px;
-    border: 2px solid #fff;
     border-radius: 10px;
     background: #000;
+    border: 2px solid #fff;
+    object-fit: cover;
 }
 
 #qr-status {
