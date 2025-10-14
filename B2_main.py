@@ -85,6 +85,7 @@ def login():
         if oc_id in oc_list and oc_list[oc_id] == password:
             session.permanent = True
             session["oc_id"] = oc_id
+            session["scan_count"] = 0
             return redirect(url_for("home"))
         else:
             error = "Invalid Credentials"
@@ -93,17 +94,15 @@ def login():
 @app.route("/logout")
 def logout():
     session.pop("oc_id", None)
+    session.pop("scan_count", None)
     return redirect(url_for("login"))
-
-from flask import jsonify, render_template_string
-
-print(f"SCAN CALLED: {delegate_id} by {session['oc_id']} at {datetime.now()}")
 
 @app.route("/scan/<delegate_id>")
 def scan(delegate_id):
     if "oc_id" not in session:
         return jsonify({"error": "Not logged in"}), 401
 
+    session["scan_count"] = session.get("scan_count", 0) + 1
     oc_id = session["oc_id"]
     delegate = delegates.get(delegate_id)
     if not delegate:
@@ -161,9 +160,7 @@ def scan(delegate_id):
     message = "Already scanned" if cached_record else "Scan successful"
     success = not cached_record
 
-    return jsonify({"delegateHTML": delegate_html, "message": message, "success": success})
-
-
+    return jsonify({"delegateHTML": delegate_html, "message": message, "success": success, "scan_count": session["scan_count"]})
 
 @app.route("/validate/<delegate_id>", methods=["POST"])
 def validate(delegate_id):
@@ -205,18 +202,15 @@ def refresh_route():
     refresh_cache()
     flash("🔄 Attendance cache refreshed from Google Sheets.")
     return redirect(url_for("home"))
-    
-    @app.route("/debug/redis")
-    @app.route("/debug/redis")
+
+@app.route("/debug/redis")
 def debug_redis():
     if "oc_id" not in session:
         return "Not logged in", 401
-
     try:
         total_keys = redis_client.dbsize()
         cache_count = redis_client.hlen("attendance_cache")
         pending_count = redis_client.llen("pending_attendance")
-
         return (
             f"Total keys in Redis: {total_keys}<br>"
             f"Delegates in attendance_cache: {cache_count}<br>"
@@ -224,8 +218,6 @@ def debug_redis():
         )
     except Exception as e:
         return f"Error accessing Redis: {e}", 500
-
-
 
 if __name__=="__main__":
     app.run(debug=False)
