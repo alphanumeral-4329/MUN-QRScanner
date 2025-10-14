@@ -4,7 +4,6 @@ document.addEventListener("DOMContentLoaded", function() {
     const ctx = canvas.getContext("2d");
     const status = document.getElementById("qr-status");
     const flashContainer = document.getElementById("flash-container");
-    const scannedDelegates = new Set();
 
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
         .then(stream => {
@@ -34,29 +33,25 @@ document.addEventListener("DOMContentLoaded", function() {
         const match = data.match(/\/scan\/([^\/\s]+)/);
         const delegateId = match ? match[1] : data;
 
-        if (scannedDelegates.has(delegateId)) {
-            showFlash(`Delegate ${delegateId} already scanned`, 'warning');
-            return;
-        }
-
         status.innerText = `Scanning: ${delegateId}`;
 
         try {
             const response = await fetch(`/scan/${delegateId}`);
-            const html = await response.text();
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, "text/html");
-            const newCard = doc.querySelector(".delegate-card");
-            const oldCard = document.querySelector(".delegate-card");
+            const result = await response.json();
 
-            if (newCard) {
-                if (oldCard) oldCard.replaceWith(newCard);
-                else document.querySelector(".container").prepend(newCard);
+            if (result.delegateHTML) {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(result.delegateHTML, "text/html");
+                const newCard = doc.querySelector(".delegate-card");
+                const oldCard = document.querySelector(".delegate-card");
+                if (newCard) {
+                    if (oldCard) oldCard.replaceWith(newCard);
+                    else document.querySelector(".container").prepend(newCard);
+                }
             }
 
-            scannedDelegates.add(delegateId);
-            showFlash(`Delegate ${delegateId} scanned successfully`, 'success');
-        } catch {
+            showFlash(result.message, result.success ? 'success' : 'warning');
+        } catch (err) {
             showFlash(`Error scanning delegate ${delegateId}`, 'error');
         }
     }
@@ -68,4 +63,4 @@ document.addEventListener("DOMContentLoaded", function() {
         flashContainer.appendChild(flash);
         setTimeout(() => flash.remove(), 3000);
     }
-}); 
+});
