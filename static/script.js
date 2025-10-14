@@ -4,6 +4,8 @@ document.addEventListener("DOMContentLoaded", function() {
     const ctx = canvas.getContext("2d");
     const status = document.getElementById("qr-status");
     const flashContainer = document.getElementById("flash-container");
+    const manualForm = document.getElementById("manual-scan-form");
+    const manualInput = document.getElementById("manual-delegate-id");
 
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
         .then(stream => {
@@ -24,19 +26,21 @@ document.addEventListener("DOMContentLoaded", function() {
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const code = jsQR(imageData.data, imageData.width, imageData.height);
-            if (code) handleQRCode(code.data);
+            if (code) handleDelegate(code.data);
         }
         requestAnimationFrame(scanLoop);
     }
 
-    async function handleQRCode(data) {
+    async function handleDelegate(data) {
         const match = data.match(/\/scan\/([^\/\s]+)/);
-        const delegateId = match ? match[1] : data;
+        const delegateId = match ? match[1] : data.trim();
+        if (!delegateId) return;
 
         status.innerText = `Scanning: ${delegateId}`;
 
         try {
             const response = await fetch(`/scan/${delegateId}`);
+            if (!response.ok) throw new Error(`Server returned ${response.status}`);
             const result = await response.json();
 
             if (result.delegateHTML) {
@@ -62,5 +66,14 @@ document.addEventListener("DOMContentLoaded", function() {
         flash.innerText = message;
         flashContainer.appendChild(flash);
         setTimeout(() => flash.remove(), 3000);
+    }
+
+    if (manualForm && manualInput) {
+        manualForm.addEventListener("submit", function(e) {
+            e.preventDefault();
+            const id = manualInput.value.trim();
+            if (id) handleDelegate(id);
+            manualInput.value = "";
+        });
     }
 });
