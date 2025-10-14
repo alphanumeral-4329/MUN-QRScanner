@@ -211,13 +211,16 @@ def debug_redis():
         total_keys = redis_client.dbsize()
         cache_count = redis_client.hlen("attendance_cache")
         pending_count = redis_client.llen("pending_attendance")
+        scan_count = session.get("scan_count", 0)
         return (
             f"Total keys in Redis: {total_keys}<br>"
             f"Delegates in attendance_cache: {cache_count}<br>"
-            f"Pending attendance records: {pending_count}"
+            f"Pending attendance records: {pending_count}<br>"
+            f"Your scan_count this session: {scan_count}"
         )
     except Exception as e:
         return f"Error accessing Redis: {e}", 500
+
 
 @app.route("/flush_cache")
 def flush_cache_route():
