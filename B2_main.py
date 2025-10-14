@@ -203,6 +203,25 @@ def refresh_route():
     refresh_cache()
     flash("🔄 Attendance cache refreshed from Google Sheets.")
     return redirect(url_for("home"))
+    
+    @app.route("/debug/redis")
+def debug_redis():
+    if "oc_id" not in session:
+        return "Not logged in", 401
+
+    try:
+        total_keys = redis_client.dbsize()
+        cache_count = redis_client.hlen("attendance_cache")
+        pending_count = redis_client.llen("pending_attendance")
+
+        return (
+            f"Total keys in Redis: {total_keys}<br>"
+            f"Delegates in attendance_cache: {cache_count}<br>"
+            f"Pending attendance records: {pending_count}"
+        )
+    except Exception as e:
+        return f"Error accessing Redis: {e}", 500
+
 
 if __name__=="__main__":
     app.run(debug=False)
