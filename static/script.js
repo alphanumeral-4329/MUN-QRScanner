@@ -7,6 +7,8 @@ document.addEventListener("DOMContentLoaded", function() {
     const manualForm = document.getElementById("manual-scan-form");
     const manualInput = document.getElementById("manual-delegate-id");
 
+    let lastScannedId = null;
+
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
         .then(stream => {
             video.srcObject = stream;
@@ -26,7 +28,10 @@ document.addEventListener("DOMContentLoaded", function() {
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const code = jsQR(imageData.data, imageData.width, imageData.height);
-            if (code) handleDelegate(code.data);
+            if (code && code.data !== lastScannedId) {
+                lastScannedId = code.data;
+                handleDelegate(code.data);
+            }
         }
         requestAnimationFrame(scanLoop);
     }
@@ -50,22 +55,19 @@ document.addEventListener("DOMContentLoaded", function() {
                 const oldCard = document.querySelector(".delegate-card");
                 if (newCard) {
                     if (oldCard) oldCard.replaceWith(newCard);
-                    else document.querySelector(".container").prepend(newCard);
+                    else document.querySelector(".container").appendChild(newCard);
                 }
             }
 
-            showFlash(result.message, result.success ? 'success' : 'warning');
+            status.innerText = result.message;
         } catch (err) {
-            showFlash(`Error scanning delegate ${delegateId}`, 'error');
+            status.innerText = `Error scanning delegate ${delegateId}`;
         }
-    }
 
-    function showFlash(message, type='success') {
-        const flash = document.createElement("div");
-        flash.className = `flash-message flash-${type}`;
-        flash.innerText = message;
-        flashContainer.appendChild(flash);
-        setTimeout(() => flash.remove(), 3000);
+        setTimeout(() => {
+            status.innerText = "";
+            lastScannedId = null;
+        }, 3000);
     }
 
     if (manualForm && manualInput) {
