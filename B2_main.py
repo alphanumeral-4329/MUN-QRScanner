@@ -97,6 +97,8 @@ def logout():
 
 from flask import jsonify, render_template_string
 
+print(f"SCAN CALLED: {delegate_id} by {session['oc_id']} at {datetime.now()}")
+
 @app.route("/scan/<delegate_id>")
 def scan(delegate_id):
     if "oc_id" not in session:
