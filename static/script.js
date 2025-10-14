@@ -1,46 +1,41 @@
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script>
 document.addEventListener("DOMContentLoaded", function() {
     const video = document.getElementById("qr-video");
     const canvas = document.getElementById("qr-canvas");
     const ctx = canvas.getContext("2d");
     const status = document.getElementById("qr-status");
-
-    let lastScanned = "";
-    let lastScanTime = 0;
+    const scannedDelegates = new Set();
 
     navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-        .then(stream => {
-            video.srcObject = stream;
-            video.setAttribute("playsinline", true);
-            video.play();
-            requestAnimationFrame(tick);
-        })
-        .catch(err => {
-            console.error("Camera error:", err);
-            showFlash("Camera error: " + err, "error");
-        });
+    .then(stream => {
+        video.srcObject = stream;
+        video.setAttribute("playsinline", true);
+        video.play();
+        requestAnimationFrame(tick);
+    })
+    .catch(err => { status.innerText = "Camera error: " + err; });
 
     function tick() {
         if (video.readyState === video.HAVE_ENOUGH_DATA) {
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const code = jsQR(imageData.data, imageData.width, imageData.height);
-
             if (code) processQRCode(code.data);
         }
         requestAnimationFrame(tick);
     }
 
     async function processQRCode(data) {
-        const now = Date.now();
-        if (data === lastScanned && now - lastScanTime < 3000) return;
-        lastScanned = data;
-        lastScanTime = now;
-
         const match = data.match(/\/scan\/([^\/\s]+)/);
         const delegateId = match ? match[1] : data;
+
+        if (scannedDelegates.has(delegateId)) {
+            status.innerText = `Delegate ${delegateId} already scanned`;
+            return;
+        }
 
         status.innerText = "Scanning: " + delegateId;
 
@@ -56,29 +51,13 @@ document.addEventListener("DOMContentLoaded", function() {
             if (newCard) {
                 if (oldCard) oldCard.replaceWith(newCard);
                 else document.querySelector(".container").prepend(newCard);
-
-                const alreadyScanned = newCard.querySelector(".scanned");
-                if (alreadyScanned) {
-                    showFlash(alreadyScanned.innerText, "warning");
-                } else {
-                    showFlash("Delegate scanned!", "success");
-                }
             }
+
+            scannedDelegates.add(delegateId);
         } catch (err) {
             console.error(err);
-            showFlash("Scan failed: " + err, "error");
+            status.innerText = "Error scanning: " + err;
         }
     }
-
-    function showFlash(message, type="success") {
-        const container = document.getElementById("flash-container");
-        if (!container) return;
-
-        const div = document.createElement("div");
-        div.className = `flash-message flash-${type}`;
-        div.innerText = message;
-        container.appendChild(div);
-
-        setTimeout(() => div.remove(), 3000);
-    }
 });
+</script>
