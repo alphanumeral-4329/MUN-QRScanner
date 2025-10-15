@@ -194,6 +194,9 @@ if DEBUG_MODE:
             return "Not logged in", 401
         redis_client.delete("attendance_cache")
         return "✅ attendance_cache cleared"
+            if DEBUG_MODE:
+        session.pop("scan_count", None)
+    return "Pending attendance flushed."
 
 if __name__=="__main__":
     app.run(debug=False)
