@@ -192,11 +192,14 @@ if DEBUG_MODE:
     def flush_cache_route():
         if "oc_id" not in session:
             return "Not logged in", 401
-        redis_client.delete("attendance_cache")
-        return "✅ attendance_cache cleared"
-            if DEBUG_MODE:
-        session.pop("scan_count", None)
-    return "Pending attendance flushed."
 
-if __name__=="__main__":
+        
+        redis_client.delete("attendance_cache")
+
+        
+        session.pop("scan_count", None)
+
+        return "✅ attendance_cache and scan_count cleared successfully."
+
+if __name__ == "__main__":
     app.run(debug=False)
