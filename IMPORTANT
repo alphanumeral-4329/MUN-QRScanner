@@ -1,9 +1,0 @@
-IMPORTANT:
-Flask must be installed in Python, the app runs in a virtual environment(venv), after activating venv then enter python B2_main.py in terminal
-
-Usage instructions:
-1. Start local host with python B2_main.py (make sure to activate venv)
-2. To simulate login, type for ex. http://127.0.0.1:5000/login
-3. To simulate logout, type for ex. http://127.0.0.1:5000/logout
-4. To simulate scanning, type for ex. http://127.0.0.1:5000/scan/DL00A
-5. Refer oc_list.json and delegates.json for mock login credentials and scan details
